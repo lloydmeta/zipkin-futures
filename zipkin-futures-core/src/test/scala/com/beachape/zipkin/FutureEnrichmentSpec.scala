@@ -38,7 +38,7 @@ class FutureEnrichmentSpec extends FunSpec with Matchers with ScalaFutures with 
         val csTime = annotations.find(_.getValue == "cs").head
         val crTime = annotations.find(_.getValue == "cr").head
         val diff = crTime.getTimestamp - csTime.getTimestamp
-        diff.microseconds should be >= 1000.millis.toMicros.microseconds
+        diff.microseconds.toMicros should be(1000.millis.toMicros +- 100.millis.toMicros)
       }
     }
 

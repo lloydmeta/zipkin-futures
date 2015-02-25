@@ -48,7 +48,7 @@ class ZipkinHeaderFilterSpec extends FunSpec with Matchers with ScalaFutures wit
         annotations(0).getValue should be("sr")
         annotations(1).getValue should be("ss")
         val diff = annotations(1).getTimestamp - annotations(0).getTimestamp
-        diff.microseconds should be >= 150.millis.toMicros.microseconds
+        diff.microseconds.toMicros should be(150.millis.toMicros +- 100.millis.toMicros)
       }
     }
 
