@@ -24,7 +24,7 @@ object FutureEnrichment {
         maybeChildSpan.foreach { sentChildSpan =>
           f.onComplete {
             case t if t.isSuccess => zipkinService.clientReceived(sentChildSpan, annotations: _*)
-            case Failure(e) => zipkinService.clientReceived(sentChildSpan, (annotations :+ ("result" -> s"Failed w/: ${e}")): _*)
+            case Failure(e) => zipkinService.clientReceived(sentChildSpan, (annotations :+ ("failed" -> s"Finished with exception: ${e.getMessage}")): _*)
           }
         }
       }
