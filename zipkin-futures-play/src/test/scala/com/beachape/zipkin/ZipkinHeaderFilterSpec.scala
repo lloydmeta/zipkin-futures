@@ -2,7 +2,7 @@ package com.beachape.zipkin
 
 import com.beachape.zipkin.services.{ BraveZipkinService, DummyCollector }
 import org.scalatest._
-import org.scalatest.concurrent.{ IntegrationPatience, PatienceConfiguration, ScalaFutures }
+import org.scalatest.concurrent.{ Eventually, IntegrationPatience, PatienceConfiguration, ScalaFutures }
 import play.api.mvc.{ Results, RequestHeader }
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
@@ -11,7 +11,14 @@ import scala.concurrent.duration._
 
 import scala.concurrent.Future
 
-class ZipkinHeaderFilterSpec extends FunSpec with Matchers with ScalaFutures with Results with IntegrationPatience with PatienceConfiguration {
+class ZipkinHeaderFilterSpec
+    extends FunSpec
+    with Matchers
+    with ScalaFutures
+    with Results
+    with Eventually
+    with IntegrationPatience
+    with PatienceConfiguration {
 
   import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -23,11 +30,18 @@ class ZipkinHeaderFilterSpec extends FunSpec with Matchers with ScalaFutures wit
 
   describe("#apply") {
 
+    import HttpHeaders._
+
     it("should provide the inner filters w/ Zipkin headers") {
-      import HttpHeaders._
       val (_, subject) = collectorAndFilter
       val fResult = subject.apply(headersToString)(FakeRequest())
       contentAsString(fResult) should (include(ParentIdHeaderKey.toString) and include(TraceIdHeaderKey.toString) and include(SpanIdHeaderKey.toString))
+    }
+
+    it("should use a Span defined via request headers as a parent") {
+      val (_, subject) = collectorAndFilter
+      val fResult = subject.apply(headersToString)(FakeRequest().withHeaders(TraceIdHeaderKey.toString -> "123", SpanIdHeaderKey.toString -> "456"))
+      contentAsString(fResult) should (include(s"${ParentIdHeaderKey.toString}=456") and include(s"${TraceIdHeaderKey.toString}=123"))
     }
 
     it("should log the processing time to Zipkin") {
@@ -40,6 +54,7 @@ class ZipkinHeaderFilterSpec extends FunSpec with Matchers with ScalaFutures wit
       }
       val fResult = subject.apply(slowProcessing)(FakeRequest())
       whenReady(fResult) { _ =>
+        eventually { collector.collected().size shouldBe 1 }
         val collectedSpans = collector.collected()
         collectedSpans.size shouldBe 1
         val span = collectedSpans.head

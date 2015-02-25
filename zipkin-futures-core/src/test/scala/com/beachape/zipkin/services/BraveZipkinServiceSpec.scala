@@ -2,10 +2,10 @@ package com.beachape.zipkin.services
 
 import com.twitter.zipkin.gen.Span
 import org.scalatest._
-import org.scalatest.concurrent.ScalaFutures
+import org.scalatest.concurrent.{ Eventually, ScalaFutures }
 import scala.collection.JavaConverters._
 
-class BraveZipkinServiceSpec extends FunSpec with Matchers with ScalaFutures {
+class BraveZipkinServiceSpec extends FunSpec with Matchers with ScalaFutures with Eventually {
 
   import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -91,8 +91,7 @@ class BraveZipkinServiceSpec extends FunSpec with Matchers with ScalaFutures {
       whenReady(service.serverReceived(span(Some(123), Some(123), Some("blah")))) { r =>
         val Some(serverSpan) = r
         whenReady(service.serverSent(serverSpan)) { r =>
-          val collected = collector.collected()
-          collected should not be 'empty
+          eventually { collector.collected() should not be 'empty }
         }
       }
     }
@@ -164,8 +163,7 @@ class BraveZipkinServiceSpec extends FunSpec with Matchers with ScalaFutures {
       whenReady(service.clientSent(span(Some(123), Some(123), Some("blah")))) { r =>
         val Some(clientSpan) = r
         whenReady(service.clientReceived(clientSpan)) { r =>
-          val collected = collector.collected()
-          collected should not be 'empty
+          eventually { collector.collected() should not be 'empty }
         }
       }
     }

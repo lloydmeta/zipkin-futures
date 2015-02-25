@@ -4,12 +4,18 @@ import com.beachape.zipkin.services.{ BraveZipkinService, DummyCollector }
 import com.twitter.zipkin.gen.Span
 import org.scalatest._
 import scala.collection.JavaConverters._
-import org.scalatest.concurrent.{ PatienceConfiguration, IntegrationPatience, ScalaFutures }
+import org.scalatest.concurrent.{ Eventually, PatienceConfiguration, IntegrationPatience, ScalaFutures }
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
 
-class FutureEnrichmentSpec extends FunSpec with Matchers with ScalaFutures with IntegrationPatience with PatienceConfiguration {
+class FutureEnrichmentSpec
+    extends FunSpec
+    with Matchers
+    with ScalaFutures
+    with IntegrationPatience
+    with PatienceConfiguration
+    with Eventually {
 
   import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -30,6 +36,7 @@ class FutureEnrichmentSpec extends FunSpec with Matchers with ScalaFutures with 
         1
       }.trace("sleepy")
       whenReady(f) { _ =>
+        eventually { collector.collected().size shouldBe 1 }
         val collected = collector.collected()
         collected.size shouldBe (1)
         val span = collected.head
