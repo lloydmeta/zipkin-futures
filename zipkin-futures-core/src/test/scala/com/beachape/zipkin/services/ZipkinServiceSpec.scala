@@ -1,5 +1,6 @@
 package com.beachape.zipkin.services
 
+import com.beachape.zipkin.HttpHeaders
 import com.twitter.zipkin.gen.Span
 import org.scalatest._
 
@@ -63,6 +64,26 @@ class ZipkinServiceSpec extends FunSpec with Matchers {
       span.setTrace_id(123)
       val notChild = subject.generateSpan("hello", span)
       notChild.isSetParent_id shouldBe true
+    }
+
+  }
+
+  describe("#spanToIdsMap") {
+
+    it("should return an empty map if all the ids are zero (not set according to Zipkin conventions)") {
+      val map = subject.spanToIdsMap(new Span())
+      map shouldBe 'empty
+    }
+
+    it("should return a map with set ids") {
+      val span = new Span()
+      span.setId(123)
+      span.setTrace_id(456)
+      span.setParent_id(789)
+      val map = subject.spanToIdsMap(span)
+      map(HttpHeaders.SpanIdHeaderKey.toString) shouldBe ("123")
+      map(HttpHeaders.TraceIdHeaderKey.toString) shouldBe ("456")
+      map(HttpHeaders.ParentIdHeaderKey.toString) shouldBe ("789")
     }
 
   }

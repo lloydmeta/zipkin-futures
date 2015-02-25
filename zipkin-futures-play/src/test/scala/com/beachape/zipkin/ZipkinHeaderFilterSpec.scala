@@ -35,7 +35,7 @@ class ZipkinHeaderFilterSpec
     it("should provide the inner filters w/ Zipkin headers") {
       val (_, subject) = collectorAndFilter
       val fResult = subject.apply(headersToString)(FakeRequest())
-      contentAsString(fResult) should (include(ParentIdHeaderKey.toString) and include(TraceIdHeaderKey.toString) and include(SpanIdHeaderKey.toString))
+      contentAsString(fResult) should (include(TraceIdHeaderKey.toString) and include(SpanIdHeaderKey.toString))
     }
 
     it("should use a Span defined via request headers as a parent") {

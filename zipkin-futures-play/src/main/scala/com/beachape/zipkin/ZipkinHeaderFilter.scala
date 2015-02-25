@@ -48,18 +48,10 @@ class ZipkinHeaderFilter(zipkinServiceFactory: => ZipkinServiceLike) extends Fil
   }
 
   private def addHeadersToReq(req: RequestHeader, span: Span): RequestHeader = {
-    import HttpHeaders._
     val originalHeaderData = req.headers.toMap
-    val newHeaderData = Seq(
-      (Option(span.getTrace_id), TraceIdHeaderKey),
-      (Option(span.getId), SpanIdHeaderKey),
-      (Option(span.getParent_id), ParentIdHeaderKey)
-    ).foldLeft(originalHeaderData) {
-        case (acc, (Some(id), headerKey)) =>
-          acc + (headerKey.toString -> Seq(id.toString))
-      }
+    val withSpanData = originalHeaderData ++ zipkinService.spanToIdsMap(span).map { case (key, value) => key -> Seq(value) }
     val newHeaders = new Headers {
-      protected val data: Seq[(String, Seq[String])] = newHeaderData.toSeq
+      protected val data: Seq[(String, Seq[String])] = withSpanData.toSeq
     }
     req.copy(headers = newHeaders)
   }

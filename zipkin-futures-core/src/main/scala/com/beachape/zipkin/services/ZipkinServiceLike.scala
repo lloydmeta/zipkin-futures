@@ -1,5 +1,7 @@
 package com.beachape.zipkin.services
 
+import com.beachape.zipkin.HttpHeaders
+import com.beachape.zipkin.HttpHeaders._
 import com.twitter.zipkin.gen.Span
 
 import scala.concurrent.{ ExecutionContext, Future }
@@ -98,6 +100,24 @@ trait ZipkinServiceLike {
    * Provides a way of turning a custom [[ClientSpan]] back into a normal [[Span]]
    */
   def clientSpanToSpan(clientSpan: ClientSpan): Span
+
+  /**
+   * Turns a [[Span]] into a Map[String, String]
+   *
+   * Useful turning a [[Span]] into a data structure that can be more easily serialised in
+   * order to be passed onto other systems via some kind of transport protocol.
+   */
+  def spanToIdsMap(span: Span): Map[String, String] = {
+    import HttpHeaders._
+    Seq(
+      (Option(span.getTrace_id), TraceIdHeaderKey),
+      (Option(span.getId), SpanIdHeaderKey),
+      (Option(span.getParent_id), ParentIdHeaderKey)
+    ).foldLeft(Map.empty[String, String]) {
+        case (acc, (Some(id), headerKey)) if id != 0L => acc + (headerKey.toString -> id.toString)
+        case (acc, _) => acc
+      }
+  }
 
   /**
    * Determines if the [[Span]] is minimally sendable to Zipkin (has an id, has a trace id, and has a
