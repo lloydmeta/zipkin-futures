@@ -89,6 +89,7 @@ object ZipkinFutures extends Build {
   }
 
   lazy val scoverageSettings = Seq(
+    coverageExcludedPackages := """.*Noop.*, .*HttpHeaders""",
     coverageHighlighting := true
   )
 
