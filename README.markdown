@@ -10,8 +10,20 @@ Also, mostly meant to be used with Play2.
 
 ```scala
 libraryDependencies ++= Seq(
-    "com.beachape" %% "zipkin-futures" % "0.0.1",
-    "com.beachape" %% "zipkin-futures-play" % "0.0.1" // if you are using Play and want to avoid boilerplate
+    "com.beachape" %% "zipkin-futures" % "0.0.1"  // OR
+    "com.beachape" %% "zipkin-futures-play" % "0.0.1" // if you are using Play and want to use the filter w/ RequestHeader conversions
+)
+```
+
+If the above does not work because it cannot be resolved, its likely because it hasn't been synced to Maven central yet.
+In that case, download a SNAPSHOT release of the same version by adding this to build.sbt
+
+```scala
+resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
+
+libraryDependencies ++= Seq(
+    "com.beachape" %% "zipkin-futures" % "0.0.1-SNAPSHOT" // OR
+    "com.beachape" %% "zipkin-futures-play" % "0.0.1-SNAPSHOT" // if you are using Play and want to use the filter w/ RequestHeader conversions
 )
 ```
 
