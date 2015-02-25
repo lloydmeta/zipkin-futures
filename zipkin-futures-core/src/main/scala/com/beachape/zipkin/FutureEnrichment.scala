@@ -13,9 +13,10 @@ object FutureEnrichment {
     /**
      * Does a trace of a [[Future]] using a Client Sent/Receive annotation pair.
      *
-     * This function expects that there is a parent [[Span]] in scope. If there is even if there is a
-     * [[Span]] in scope, it may not be used as a Parent [[Span]] if it does not have the proper ids,
-     * namely a span id and a trace id. In this case, a new scope with the given name will be used.
+     * This function expects that there is a parent [[Span]] in scope. If there is even is a [[Span]]
+     * in scope, it may not be used as a Parent [[Span]] if it does not have the proper ids, namely
+     * a span id and a trace id. In this case, a new scope with the given name and new ids will be used
+     * and it will not have a parent id.
      */
     def trace(name: String, annotations: (String, String)*)(implicit parentSpan: Span, zipkinService: ZipkinServiceLike, ec: ExecutionContext): Future[A] = {
       val childSpan = zipkinService.generateSpan(name, parentSpan)
