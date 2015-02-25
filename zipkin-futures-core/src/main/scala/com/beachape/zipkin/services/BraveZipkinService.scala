@@ -19,7 +19,12 @@ import scala.concurrent.{ ExecutionContext, Future }
  *                     The trace filters will be executed in order. If one returns false there will not be tracing and
  *                     the next trace filters will not be executed anymore.
  */
-class BraveZipkinService(hostIp: String, hostPort: Int, serviceName: String, collector: SpanCollector, traceFilters: Seq[String => Boolean] = Seq.empty) extends ZipkinServiceLike {
+class BraveZipkinService(hostIp: String,
+                         hostPort: Int,
+                         serviceName: String,
+                         collector: SpanCollector,
+                         traceFilters: Seq[String => Boolean] = Seq.empty)(implicit val eCtx: ExecutionContext)
+    extends ZipkinServiceLike {
 
   type ServerSpan = brave.ServerSpan
   type ClientSpan = Span
@@ -34,7 +39,7 @@ class BraveZipkinService(hostIp: String, hostPort: Int, serviceName: String, col
     endPointSubmitter.submit(hostIp, hostPort, serviceName)
   }
 
-  def serverReceived(span: Span, annotations: (String, String)*)(implicit eCtx: ExecutionContext): Future[Option[ServerSpan]] = {
+  def serverReceived(span: Span, annotations: (String, String)*): Future[Option[ServerSpan]] = {
     existingServerSpan(span) match {
       case None => Future.successful(None)
       case Some(serverSpan) => Future {
@@ -46,7 +51,7 @@ class BraveZipkinService(hostIp: String, hostPort: Int, serviceName: String, col
     }
   }
 
-  def serverSent(span: ServerSpan, annotations: (String, String)*)(implicit eCtx: ExecutionContext): Future[Option[ServerSpan]] = {
+  def serverSent(span: ServerSpan, annotations: (String, String)*): Future[Option[ServerSpan]] = {
     if (shouldSend(span.getSpan)) Future {
       annotations.foreach { case (key, value) => serverTracer.submitBinaryAnnotation(key, value) }
       serverThreadBinder.setCurrentSpan(span)
@@ -58,7 +63,7 @@ class BraveZipkinService(hostIp: String, hostPort: Int, serviceName: String, col
     }
   }
 
-  def clientSent(span: Span, annotations: (String, String)*)(implicit eCtx: ExecutionContext): Future[Option[ClientSpan]] = {
+  def clientSent(span: Span, annotations: (String, String)*): Future[Option[ClientSpan]] = {
     if (shouldSend(span)) Future {
       clientThreadBinder.setCurrentSpan(span)
       clientTracer.setClientSent()
@@ -70,7 +75,7 @@ class BraveZipkinService(hostIp: String, hostPort: Int, serviceName: String, col
     }
   }
 
-  def clientReceived(span: ClientSpan, annotations: (String, String)*)(implicit eCtx: ExecutionContext): Future[Option[ClientSpan]] = {
+  def clientReceived(span: ClientSpan, annotations: (String, String)*): Future[Option[ClientSpan]] = {
     if (shouldSend(span)) Future {
       clientThreadBinder.setCurrentSpan(span)
       annotations.foreach { case (key, value) => clientTracer.submitBinaryAnnotation(key, value) }

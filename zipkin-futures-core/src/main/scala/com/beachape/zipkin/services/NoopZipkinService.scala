@@ -14,7 +14,9 @@ object NoopZipkinService extends ZipkinServiceLike {
   type ServerSpan = Span
   type ClientSpan = Span
 
-  def serverReceived(span: Span, annotations: (String, String)*)(implicit eCtx: ExecutionContext): Future[Option[ServerSpan]] = {
+  implicit val eCtx = scala.concurrent.ExecutionContext.global
+
+  def serverReceived(span: Span, annotations: (String, String)*): Future[Option[ServerSpan]] = {
     Future.successful {
       if (sendableSpan(span)) {
         span.addToAnnotations(new Annotation(System.currentTimeMillis(), "sr"))
@@ -23,7 +25,7 @@ object NoopZipkinService extends ZipkinServiceLike {
     }
   }
 
-  def clientSent(span: Span, annotations: (String, String)*)(implicit eCtx: ExecutionContext): Future[Option[ClientSpan]] = {
+  def clientSent(span: Span, annotations: (String, String)*): Future[Option[ClientSpan]] = {
     Future.successful {
       if (sendableSpan(span)) {
         span.addToAnnotations(new Annotation(System.currentTimeMillis(), "cs"))
@@ -32,14 +34,14 @@ object NoopZipkinService extends ZipkinServiceLike {
     }
   }
 
-  def serverSent(span: ServerSpan, annotations: (String, String)*)(implicit eCtx: ExecutionContext): Future[Option[ServerSpan]] = {
+  def serverSent(span: ServerSpan, annotations: (String, String)*): Future[Option[ServerSpan]] = {
     Future.successful {
       span.addToAnnotations(new Annotation(System.currentTimeMillis(), "ss"))
       Some(span)
     }
   }
 
-  def clientReceived(span: ClientSpan, annotations: (String, String)*)(implicit eCtx: ExecutionContext): Future[Option[ClientSpan]] = {
+  def clientReceived(span: ClientSpan, annotations: (String, String)*): Future[Option[ClientSpan]] = {
     Future.successful {
       span.addToAnnotations(new Annotation(System.currentTimeMillis(), "cr"))
       Some(span)

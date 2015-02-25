@@ -18,7 +18,8 @@ object FutureEnrichment {
      * a span id and a trace id. In this case, a new scope with the given name and new ids will be used
      * and it will not have a parent id.
      */
-    def trace(name: String, annotations: (String, String)*)(implicit parentSpan: Span, zipkinService: ZipkinServiceLike, ec: ExecutionContext): Future[A] = {
+    def trace(name: String, annotations: (String, String)*)(implicit parentSpan: Span, zipkinService: ZipkinServiceLike): Future[A] = {
+      import zipkinService.eCtx // Because tracing-related tasks should use the same ExecutionContext
       val childSpan = zipkinService.generateSpan(name, parentSpan)
       val fChildSpan = zipkinService.clientSent(childSpan, annotations: _*)
       fChildSpan.foreach { maybeChildSpan =>

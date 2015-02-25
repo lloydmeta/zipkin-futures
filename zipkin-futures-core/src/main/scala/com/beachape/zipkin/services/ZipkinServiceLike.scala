@@ -23,12 +23,17 @@ trait ZipkinServiceLike {
   type ClientSpan
 
   /**
+   * The execution context provided by and used within this service for tracing purposes
+   */
+  implicit def eCtx: ExecutionContext
+
+  /**
    * Returns a [[ServerSpan]] with a ServerReceived annotation that will later be used to signal to the Zipkin collector
    * that a server received event has occurred at the current time.
    *
    * If annotations are provided, they will also be added.
    */
-  def serverReceived(span: Span, annotations: (String, String)*)(implicit eCtx: ExecutionContext): Future[Option[ServerSpan]]
+  def serverReceived(span: Span, annotations: (String, String)*): Future[Option[ServerSpan]]
 
   /**
    * Returns a [[ServerSpan]] with a ServerSent annotation that will be used to signal to the Zipkin collector that a server
@@ -37,7 +42,7 @@ trait ZipkinServiceLike {
    *
    * If annotations are provided, they will also be added.
    */
-  def serverSent(span: ServerSpan, annotations: (String, String)*)(implicit eCtx: ExecutionContext): Future[Option[ServerSpan]]
+  def serverSent(span: ServerSpan, annotations: (String, String)*): Future[Option[ServerSpan]]
 
   /**
    * Creates a [[ClientSpan]] with a ClientSent annotation that will later be used to signal to the Zipkin collector that a Client
@@ -45,7 +50,7 @@ trait ZipkinServiceLike {
    *
    * If annotations are provided, they will also be added.
    */
-  def clientSent(span: Span, annotations: (String, String)*)(implicit eCtx: ExecutionContext): Future[Option[ClientSpan]]
+  def clientSent(span: Span, annotations: (String, String)*): Future[Option[ClientSpan]]
 
   /**
    * Creates a [[ClientSpan]] with a ClientReceived annotation that will be used to signal to the Zipkin collector that a Client
@@ -54,7 +59,7 @@ trait ZipkinServiceLike {
    *
    * If annotations are provided, they will also be added.
    */
-  def clientReceived(span: ClientSpan, annotations: (String, String)*)(implicit eCtx: ExecutionContext): Future[Option[ClientSpan]]
+  def clientReceived(span: ClientSpan, annotations: (String, String)*): Future[Option[ClientSpan]]
 
   /**
    * Returns a [[Span]] based on a name and a parent [[Span]], which may or may not be used
