@@ -1,4 +1,4 @@
-# Zipkin-futures
+# Zipkin-futures [![Build Status](https://travis-ci.org/lloydmeta/zipkin-futures.svg?branch=master)](https://travis-ci.org/lloydmeta/zipkin-futures) [![Coverage Status](https://coveralls.io/repos/lloydmeta/zipkin-futures/badge.svg)](https://coveralls.io/r/lloydmeta/zipkin-futures)
 
 Hopefully provides a nice way to use Scala `Future`s with Zipkin tracing.
 
