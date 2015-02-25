@@ -44,6 +44,12 @@ class ZipkinHeaderFilterSpec
       contentAsString(fResult) should (include(s"${ParentIdHeaderKey.toString}=456") and include(s"${TraceIdHeaderKey.toString}=123"))
     }
 
+    it("should preserve any other random request headers by default") {
+      val (_, subject) = collectorAndFilter
+      val fResult = subject.apply(headersToString)(FakeRequest().withHeaders("X-Forwarded-For" -> "1.2.3.4"))
+      contentAsString(fResult) should (include("X-Forwarded-For=1.2.3.4"))
+    }
+
     it("should log the processing time to Zipkin") {
       val (collector, subject) = collectorAndFilter
       val slowProcessing = { r: RequestHeader =>
