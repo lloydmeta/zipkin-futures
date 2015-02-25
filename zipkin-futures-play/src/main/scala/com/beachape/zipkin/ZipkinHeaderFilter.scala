@@ -11,15 +11,15 @@ import scala.util.Failure
 /**
  * A Global filter that should be inserted at the beginning of the filter list for monitoring purposes.
  *
- * Most of the work is delgated, but no a high-level, this is a Filter that intercepts [[RequestHeader]]s and:
+ * Most of the work is delegated, but on a high-level, this is a Filter that intercepts [[RequestHeader]]s and:
  *
  *   1. Checks to see if there are Zipkin-related Http headers in the request
- *     -  If there are headers that represent a parent [[Span]], creates a new child [[Span]]
+ *     - If there are headers that represent a parent [[Span]], creates a new child [[Span]]
  *     - If there aren't headers that represent a parent [[Span]], creates a new [[Span]]
  *   2. Adds a ServerReceived annotation to the [[Span]]
- *   3. Adds Zipkin header key-value pairs to the request so that the they are passed on for
- *      further processing
- *   4. Upon completion of the request, adds a ServerSent annotation to it and sends it to the Zipkin Collector
+ *   3. Adds Zipkin header key-value pairs to the [[RequestHeader]]'s header so that the they are available inside
+ *      the app for further processing by in controllers or further filters
+ *   4. Upon completion of the request, adds a ServerSent annotation to the [[Span]] and sends it to the Zipkin Collector
  *
  */
 class ZipkinHeaderFilter(zipkinServiceFactory: => ZipkinServiceLike) extends Filter {
