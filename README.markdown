@@ -8,7 +8,7 @@ Also, mostly meant to be used with Play2.
 
 ## SBT
 
-```
+```scala
 libraryDependencies ++= Seq(
     "com.beachape" %% "zipkin-futures" % "0.0.1",
     "com.beachape" %% "zipkin-futures-play" % "0.0.1" // if you are using Play and want to avoid boilerplate
@@ -33,7 +33,7 @@ object Global
 In your controllers or action filters, (e.g. in Application.scala), import the `RequestHeader` to `Span` converter and
 the enrichment to `Future`.
 
-```
+```scala
 import com.beachape.zipkin.Implicits._
 import com.beachape.zipkin.FutureEnrichments._
 
