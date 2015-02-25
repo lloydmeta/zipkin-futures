@@ -1,7 +1,6 @@
 package com.beachape.zipkin.services
 
 import com.beachape.zipkin.HttpHeaders
-import com.beachape.zipkin.HttpHeaders._
 import com.twitter.zipkin.gen.Span
 
 import scala.concurrent.{ ExecutionContext, Future }
