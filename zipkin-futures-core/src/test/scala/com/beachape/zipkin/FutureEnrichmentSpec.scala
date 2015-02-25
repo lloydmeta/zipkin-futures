@@ -32,7 +32,7 @@ class FutureEnrichmentSpec
       implicit val (collector, zipkin) = subjects()
       implicit val span = new Span()
       val f = Future {
-        Thread.sleep(1000.millis.toMillis)
+        Thread.sleep(2000.millis.toMillis)
         1
       }.trace("sleepy")
       whenReady(f) { _ =>
@@ -45,7 +45,7 @@ class FutureEnrichmentSpec
         val csTime = annotations.find(_.getValue == "cs").head
         val crTime = annotations.find(_.getValue == "cr").head
         val diff = crTime.getTimestamp - csTime.getTimestamp
-        diff.microseconds.toMicros should be(1000.millis.toMicros +- 100.millis.toMicros)
+        diff.microseconds.toMicros should be(2000.millis.toMicros +- 200.millis.toMicros)
       }
     }
 

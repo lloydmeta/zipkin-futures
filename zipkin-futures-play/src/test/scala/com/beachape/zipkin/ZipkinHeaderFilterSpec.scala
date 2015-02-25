@@ -54,7 +54,7 @@ class ZipkinHeaderFilterSpec
       val (collector, subject) = collectorAndFilter
       val slowProcessing = { r: RequestHeader =>
         Future {
-          Thread.sleep(150.millis.toMillis)
+          Thread.sleep(2000.millis.toMillis)
           Ok("boom")
         }
       }
@@ -69,7 +69,7 @@ class ZipkinHeaderFilterSpec
         annotations(0).getValue should be("sr")
         annotations(1).getValue should be("ss")
         val diff = annotations(1).getTimestamp - annotations(0).getTimestamp
-        diff.microseconds.toMicros should be(150.millis.toMicros +- 100.millis.toMicros)
+        diff.microseconds.toMicros should be(2000.millis.toMicros +- 200.millis.toMicros)
       }
     }
 
