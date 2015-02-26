@@ -6,6 +6,10 @@ ATM mostly a wrapper around Brave, but can be extended to use other Zipkin libs 
 
 Also, mostly meant to be used with Play2.
 
+For more information on Zipkin, checkout the [official docs](https://twitter.github.io/zipkin/). This readme and the rest
+of the project assumes that you already have Zipkin infra set up, and know about CS,CR,SS,SR annotations and `Spans` in
+general.
+
 ## SBT
 
 ```scala
@@ -31,16 +35,20 @@ libraryDependencies ++= Seq(
 
 *Note* For more (up-to-date) details, refer to the tests.
 
+In both of the following examples, a Zipkin `Span` will be created before the execution of the defined `Future` and
+marked with a client-sent annotation (as well as the initially provided var arg annotations). Upon the completion of
+the `Future`, the generated `Span` will be marked with a client-received annotation and sent to the Zipkin collector.
+
 ```scala
 
 // Simple tracing
-val myTracedFuture = TracedFuture("slowHttpCall") { maybeSpan =>
+val myTracedFuture1 = TracedFuture("slowHttpCall") { maybeSpan =>
   val forwardHeaders = maybeSpan.fold(Seq.empty[(String,String)]){ toHttpHeaders }
   WS.url("myServer").withHeaders(forwardHeaders:_*)
 }
 
-// Tracing setting annotations from the future before sending ClientReceieved ;)
-val myTracedFuture = TracedFuture.endAnnotations("slowHttpCall") { maybeSpan =>
+// Tracing and setting annotations from the future before sending Client-Received ;)
+val myTracedFuture2 = TracedFuture.endAnnotations("slowHttpCall") { maybeSpan =>
   val forwardHeaders = maybeSpan.fold(Seq.empty[(String,String)]){ toHttpHeaders }
   WS.url("myServer").withHeaders(forwardHeaders:_*).map { response =>
     (response.json, Seq("session id" -> response.header("session id").toString))
