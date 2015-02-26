@@ -70,7 +70,7 @@ object TracedFuture {
    * Example:
    *
    * {{{
-   * val myTracedFuture = TracedFuture("slowHttpCall") { maybeSpan =>
+   * val myTracedFuture = TracedFuture.endAnnotations("slowHttpCall") { maybeSpan =>
    *   val forwardHeaders = maybeSpan.fold(Seq.empty[(String,String)]){ toHttpHeaders }
    *   WS.url("myServer").withHeaders(forwardHeaders:_*).map { response =>
    *      (response.json, Seq("session id" -> response.header("session id").toString))

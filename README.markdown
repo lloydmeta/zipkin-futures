@@ -10,8 +10,8 @@ Also, mostly meant to be used with Play2.
 
 ```scala
 libraryDependencies ++= Seq(
-    "com.beachape" %% "zipkin-futures" % "0.0.3"  // OR
-    "com.beachape" %% "zipkin-futures-play" % "0.0.3" // if you are using Play and want to use the filter w/ RequestHeader conversions
+    "com.beachape" %% "zipkin-futures" % "0.0.4"  // OR
+    "com.beachape" %% "zipkin-futures-play" % "0.0.4" // if you are using Play and want to use the filter w/ RequestHeader conversions
 )
 ```
 
@@ -22,12 +22,34 @@ In that case, download a SNAPSHOT release of the same version by adding this to 
 resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
 
 libraryDependencies ++= Seq(
-    "com.beachape" %% "zipkin-futures" % "0.0.3-SNAPSHOT" // OR
-    "com.beachape" %% "zipkin-futures-play" % "0.0.3-SNAPSHOT" // if you are using Play and want to use the filter w/ RequestHeader conversions
+    "com.beachape" %% "zipkin-futures" % "0.0.4-SNAPSHOT" // OR
+    "com.beachape" %% "zipkin-futures-play" % "0.0.4-SNAPSHOT" // if you are using Play and want to use the filter w/ RequestHeader conversions
 )
 ```
 
 ## Example
+
+*Note* For more (up-to-date) details, refer to the tests.
+
+```scala
+
+// Simple tracing
+val myTracedFuture = TracedFuture("slowHttpCall") { maybeSpan =>
+  val forwardHeaders = maybeSpan.fold(Seq.empty[(String,String)]){ toHttpHeaders }
+  WS.url("myServer").withHeaders(forwardHeaders:_*)
+}
+
+// Tracing setting annotations from the future before sending ClientReceieved ;)
+val myTracedFuture = TracedFuture.endAnnotations("slowHttpCall") { maybeSpan =>
+  val forwardHeaders = maybeSpan.fold(Seq.empty[(String,String)]){ toHttpHeaders }
+  WS.url("myServer").withHeaders(forwardHeaders:_*).map { response =>
+    (response.json, Seq("session id" -> response.header("session id").toString))
+  }
+}
+
+```
+
+## Example with Play
 
 An example of how this can be used within a Play 2 app. *Note* Use without a Play app is possible, but you will need to figure
 out how to provide an implicit `Span` to the trace function.
@@ -54,7 +76,7 @@ class Application(implicit zipkinService: ZipkinServiceLike) extends Controller 
   import play.api.libs.concurrent.Execution.Implicits._
 
   def index = Action.async { implicit req =>
-    // The following will be traced
+    // Syntactic sugar
     Future { Ok(expensiveResult) } trace ("expensive-process")
   }
 
