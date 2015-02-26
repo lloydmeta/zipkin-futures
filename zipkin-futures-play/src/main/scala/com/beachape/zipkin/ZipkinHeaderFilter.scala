@@ -30,7 +30,7 @@ class ZipkinHeaderFilter(zipkinServiceFactory: => ZipkinServiceLike) extends Fil
   private implicit lazy val zipkinService = zipkinServiceFactory
 
   def apply(nextFilter: (RequestHeader) => Future[Result])(req: RequestHeader): Future[Result] = {
-    val parentSpan = zipkinService.generateSpan(req.uri, req2span(req))
+    val parentSpan = zipkinService.generateSpan(req.path, req2span(req))
     val fMaybeServerSpan = zipkinService.serverReceived(parentSpan)
     fMaybeServerSpan flatMap {
       case None => nextFilter(req)
