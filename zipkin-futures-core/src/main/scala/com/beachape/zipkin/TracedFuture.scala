@@ -36,6 +36,13 @@ object TracedFuture {
    *   WS.url("myServer").withHeaders(forwardHeaders:_*)
    * }
    * }}}
+   *
+   * @param traceName the name for the span used for tracing
+   * @param annotations variable list of annotations to send for tracing in the beginning (after the client sent
+   *                    annotation)
+   * @param f the function that will take an Option[Span] and produce a Future[A]. It is an Option[Span] because
+   *          there is a chance the [[ZipkinServiceLike]] will either fail or not produce a [[Span]] at all due to
+   *          filtering or sampling.
    */
   def apply[A](traceName: String, annotations: (String, String)*)(f: Option[Span] => Future[A])(implicit parentSpan: Span, zipkinService: ZipkinServiceLike): Future[A] = {
     import zipkinService.eCtx // Because tracing-related tasks should use the same ExecutionContext
@@ -70,6 +77,13 @@ object TracedFuture {
    *   }
    * }
    * }}}
+   *
+   * @param traceName the name for the span used for tracing
+   * @param annotations variable list of annotations to send for tracing in the beginning (after the client sent annotation)
+   * @param f the function that will take an Option[Span] and produce a Future[(A, Seq[(String, String)])]. It is an
+   *          Option[Span] because there is a chance the [[ZipkinServiceLike]] will either fail or not produce a
+   *          [[Span]] at all due to filtering or sampling. The Seq[(String, String)] will be used as annotations
+   *          to be sent right before setting client received and sending the Span.
    */
   def endAnnotations[A](traceName: String, annotations: (String, String)*)(f: Option[Span] => Future[(A, Seq[(String, String)])])(implicit parentSpan: Span, zipkinService: ZipkinServiceLike): Future[A] = {
     import zipkinService.eCtx // Because tracing-related tasks should use the same ExecutionContext
