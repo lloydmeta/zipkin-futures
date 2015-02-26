@@ -38,7 +38,7 @@ class FutureEnrichmentSpec
       whenReady(f) { _ =>
         eventually { collector.collected().size shouldBe 1 }
         val collected = collector.collected()
-        collected.size shouldBe (1)
+        collected.size shouldBe 1
         val span = collected.head
         val annotations = span.getAnnotations.asScala
         annotations.map(_.getValue) should contain allOf ("cs", "cr")

@@ -28,25 +28,63 @@ class TracedFutureSpec extends FunSpec
       (collector, new BraveZipkinService("localhost", 1234, "testing-only", collector, filters))
     }
 
-    it("should send a span with client sent and client received annotations to the ZipkinCollector") {
-      implicit val (collector, zipkin) = subjects()
-      implicit val span = new Span()
-      val f = TracedFuture("sleepy") { maybeSpan =>
-        Thread.sleep(2000.millis.toMillis)
-        Future.successful(maybeSpan)
+    describe(".apply") {
+
+      it("should send a span with client sent and client received annotations and any binary annotations to the ZipkinCollector") {
+        implicit val (collector, zipkin) = subjects()
+        implicit val span = new Span()
+        val f = TracedFuture("sleepy", "boom" -> "shakalaka") { maybeSpan =>
+          Thread.sleep(2000.millis.toMillis)
+          Future.successful(maybeSpan)
+        }
+        whenReady(f) { _ =>
+          eventually { collector.collected().size shouldBe 1 }
+          val collected = collector.collected()
+          collected.size shouldBe 1
+          val span = collected.head
+          val annotations = span.getAnnotations.asScala
+          annotations.map(_.getValue) should contain allOf ("cs", "cr")
+          val csTime = annotations.find(_.getValue == "cs").head
+          val crTime = annotations.find(_.getValue == "cr").head
+          val diff = crTime.getTimestamp - csTime.getTimestamp
+          diff.microseconds.toMicros should be(2000.millis.toMicros +- 200.millis.toMicros)
+
+          val binaryAnnotations = span.getBinary_annotations.asScala
+          binaryAnnotations.size shouldBe 1
+          binaryAnnotations.map(_.getKey) should contain("boom")
+          binaryAnnotations.map(a => new String(a.getValue)) should contain("shakalaka")
+        }
       }
-      whenReady(f) { _ =>
-        eventually { collector.collected().size shouldBe 1 }
-        val collected = collector.collected()
-        collected.size shouldBe (1)
-        val span = collected.head
-        val annotations = span.getAnnotations.asScala
-        annotations.map(_.getValue) should contain allOf ("cs", "cr")
-        val csTime = annotations.find(_.getValue == "cs").head
-        val crTime = annotations.find(_.getValue == "cr").head
-        val diff = crTime.getTimestamp - csTime.getTimestamp
-        diff.microseconds.toMicros should be(2000.millis.toMicros +- 200.millis.toMicros)
+
+    }
+
+    describe(".endAnnotations") {
+
+      it("should send a span with client sent and client received annotations and any binary annotations to the ZipkinCollector") {
+        implicit val (collector, zipkin) = subjects()
+        implicit val span = new Span()
+        val f = TracedFuture.endAnnotations("sleepy", "Toronto" -> "Kinshicho") { maybeSpan =>
+          Thread.sleep(2000.millis.toMillis)
+          Future.successful((maybeSpan, Seq("Shibuya" -> "Mitaka")))
+        }
+        whenReady(f) { _ =>
+          eventually { collector.collected().size shouldBe 1 }
+          val collected = collector.collected()
+          collected.size shouldBe 1
+          val span = collected.head
+          val annotations = span.getAnnotations.asScala
+          annotations.map(_.getValue) should contain allOf ("cs", "cr")
+          val csTime = annotations.find(_.getValue == "cs").head
+          val crTime = annotations.find(_.getValue == "cr").head
+          val diff = crTime.getTimestamp - csTime.getTimestamp
+          diff.microseconds.toMicros should be(2000.millis.toMicros +- 200.millis.toMicros)
+          val binaryAnnotations = span.getBinary_annotations.asScala
+          binaryAnnotations.size shouldBe 2
+          binaryAnnotations.map(_.getKey) should contain allOf ("Toronto", "Shibuya")
+          binaryAnnotations.map(a => new String(a.getValue)) should contain allOf ("Kinshicho", "Mitaka")
+        }
       }
+
     }
 
   }
