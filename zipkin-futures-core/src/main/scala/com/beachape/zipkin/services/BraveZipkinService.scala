@@ -46,15 +46,15 @@ class BraveZipkinService(hostIp: String,
         serverThreadBinder.setCurrentSpan(serverSpan)
         annotations.foreach { case (key, value) => serverTracer.submitBinaryAnnotation(key, value) }
         serverTracer.setServerReceived()
-        Some(serverSpan)
+        Some(serverThreadBinder.getCurrentServerSpan)
       }
     }
   }
 
   def serverSent(span: ServerSpan, annotations: (String, String)*): Future[Option[ServerSpan]] = {
     if (shouldSend(span.getSpan)) Future {
-      annotations.foreach { case (key, value) => serverTracer.submitBinaryAnnotation(key, value) }
       serverThreadBinder.setCurrentSpan(span)
+      annotations.foreach { case (key, value) => serverTracer.submitBinaryAnnotation(key, value) }
       serverTracer.setServerSend()
       Some(span)
     }
@@ -66,9 +66,9 @@ class BraveZipkinService(hostIp: String,
   def clientSent(span: Span, annotations: (String, String)*): Future[Option[ClientSpan]] = {
     if (shouldSend(span)) Future {
       clientThreadBinder.setCurrentSpan(span)
-      clientTracer.setClientSent()
       annotations.foreach { case (key, value) => clientTracer.submitBinaryAnnotation(key, value) }
-      Some(span)
+      clientTracer.setClientSent()
+      Some(clientThreadBinder.getCurrentClientSpan)
     }
     else {
       Future.successful(None)
@@ -101,7 +101,7 @@ class BraveZipkinService(hostIp: String,
    */
   private[this] def existingServerSpan(span: Span): Option[ServerSpan] = {
     if (shouldSend(span)) {
-      serverTracer.setStateCurrentTrace(span.getTrace_id, span.getId, span.getParent_id, span.getName)
+      serverTracer.setStateCurrentTrace(span.getTrace_id, span.getId, if (span.isSetParent_id) span.getParent_id else null, span.getName)
       Some(serverThreadBinder.getCurrentServerSpan)
     } else {
       None

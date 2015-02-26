@@ -6,12 +6,14 @@ import play.api.mvc.RequestHeader
 import scala.language.implicitConversions
 import scala.util.Try
 
-object Implicits {
+object Implicits extends ReqHeaderToSpanImplicit
+
+trait ReqHeaderToSpanImplicit {
 
   /**
    * Converts a [[RequestHeader]] into a Zipkin [[Span]]
    */
-  implicit def req2span(req: RequestHeader): Span = {
+  implicit def req2span(implicit req: RequestHeader): Span = {
     val span = new Span
     import HttpHeaders._
     def ghettoBind(headerKey: HttpHeaders.Value): Option[Long] = for {

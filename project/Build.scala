@@ -6,23 +6,23 @@ import scoverage.ScoverageSbtPlugin.ScoverageKeys._
 
 object ZipkinFutures extends Build {
 
-  lazy val theVersion = "0.0.1-SNAPSHOT"
+  lazy val theVersion = "0.0.4-SNAPSHOT"
   lazy val theScalaVersion = "2.11.5"
+  lazy val scalaVersionsToBuild = Seq("2.10.4", "2.11.5")
   lazy val braveVersion = "2.4.1"
-
 
   lazy val root = Project(id = "zipkin-futures-root", base = file("."), settings = commonWithPublishSettings)
     .settings(
       name := "zipkin-futures-root",
       publishArtifact := false,
-      crossScalaVersions := Seq("2.10.4", "2.11.5"),
+      crossScalaVersions := scalaVersionsToBuild,
       crossVersion := CrossVersion.binary
     ).aggregate(core, zipkinFuturesPlay)
 
   lazy val core = Project(id = "zipkin-futures", base = file("zipkin-futures-core"), settings = commonWithPublishSettings)
     .settings(
       name := "zipkin-futures",
-      crossScalaVersions := Seq("2.10.4", "2.11.5"),
+      crossScalaVersions := scalaVersionsToBuild,
       crossVersion := CrossVersion.binary,
       libraryDependencies ++= braveDependencies ++ Seq(
         "org.scalatest" %% "scalatest" % "2.2.1" % Test
@@ -31,7 +31,7 @@ object ZipkinFutures extends Build {
 
   lazy val zipkinFuturesPlay = Project(id = "zipkin-futures-play", base = file("zipkin-futures-play"), settings = commonWithPublishSettings)
     .settings(
-      crossScalaVersions := Seq("2.10.4", "2.11.5"),
+      crossScalaVersions := scalaVersionsToBuild,
       crossVersion := CrossVersion.binary,
       libraryDependencies ++= braveDependencies ++ Seq(
         "com.typesafe.play" %% "play" % "2.3.8" % Provided,
