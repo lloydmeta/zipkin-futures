@@ -6,7 +6,9 @@ import play.api.mvc.RequestHeader
 import scala.language.implicitConversions
 import scala.util.Try
 
-object Implicits {
+object Implicits extends ReqHeaderToSpanImplicit
+
+trait ReqHeaderToSpanImplicit {
 
   /**
    * Converts a [[RequestHeader]] into a Zipkin [[Span]]
