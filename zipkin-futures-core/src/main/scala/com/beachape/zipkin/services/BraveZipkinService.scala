@@ -44,8 +44,8 @@ class BraveZipkinService(hostIp: String,
       case None => Future.successful(None)
       case Some(serverSpan) => Future {
         serverThreadBinder.setCurrentSpan(serverSpan)
-        annotations.foreach { case (key, value) => serverTracer.submitBinaryAnnotation(key, value) }
         serverTracer.setServerReceived()
+        annotations.foreach { case (key, value) => serverTracer.submitBinaryAnnotation(key, value) }
         Some(serverThreadBinder.getCurrentServerSpan)
       }
     }

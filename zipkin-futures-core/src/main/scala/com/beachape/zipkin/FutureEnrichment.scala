@@ -8,6 +8,9 @@ import scala.util.Failure
 
 object FutureEnrichment {
 
+  /**
+   * Sugary stuff
+   */
   implicit class RichFuture[A](val f: Future[A]) extends AnyVal {
 
     /**
@@ -19,19 +22,9 @@ object FutureEnrichment {
      * and it will not have a parent id.
      */
     def trace(name: String, annotations: (String, String)*)(implicit parentSpan: Span, zipkinService: ZipkinServiceLike): Future[A] = {
-      import zipkinService.eCtx // Because tracing-related tasks should use the same ExecutionContext
-      val childSpan = zipkinService.generateSpan(name, parentSpan)
-      val fChildSpan = zipkinService.clientSent(childSpan, annotations: _*)
-      fChildSpan.foreach { maybeChildSpan =>
-        maybeChildSpan.foreach { sentChildSpan =>
-          f.onComplete {
-            case t if t.isSuccess => zipkinService.clientReceived(sentChildSpan)
-            case Failure(e) => zipkinService.clientReceived(sentChildSpan, "failed" -> s"Finished with exception: ${e.getMessage}")
-          }
-        }
-      }
-      f
+      TracedFuture(name, annotations: _*) { _ => f }
     }
+
   }
 
 }
