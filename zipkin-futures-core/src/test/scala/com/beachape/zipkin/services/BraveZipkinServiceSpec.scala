@@ -96,6 +96,31 @@ class BraveZipkinServiceSpec extends FunSpec with Matchers with ScalaFutures wit
       }
     }
 
+    it("should not send spans to the collector with a parent id if there is none set in the original Span") {
+      val (collector, service) = subjects()
+      whenReady(service.serverReceived(span(Some(123), Some(123), Some("blah")))) { r =>
+        val Some(serverSpan) = r
+        whenReady(service.serverSent(serverSpan)) { r =>
+          eventually { collector.collected() should not be 'empty }
+          collector.collected().head.isSetParent_id shouldBe false
+        }
+      }
+    }
+
+    it("should send spans to the collector with a parent id if there is one set in the original Span") {
+      val (collector, service) = subjects()
+      val theSpan = span(Some(123), Some(123), Some("blah"))
+      theSpan.setParent_id(999)
+      whenReady(service.serverReceived(theSpan)) { r =>
+        val Some(serverSpan) = r
+        whenReady(service.serverSent(serverSpan)) { r =>
+          eventually { collector.collected() should not be 'empty }
+          collector.collected().head.isSetParent_id shouldBe true
+          collector.collected().head.getParent_id shouldBe 999
+        }
+      }
+    }
+
   }
 
   describe("#clientSent") {

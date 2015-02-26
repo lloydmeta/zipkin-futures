@@ -101,7 +101,7 @@ class BraveZipkinService(hostIp: String,
    */
   private[this] def existingServerSpan(span: Span): Option[ServerSpan] = {
     if (shouldSend(span)) {
-      serverTracer.setStateCurrentTrace(span.getTrace_id, span.getId, span.getParent_id, span.getName)
+      serverTracer.setStateCurrentTrace(span.getTrace_id, span.getId, if (span.isSetParent_id) span.getParent_id else null, span.getName)
       Some(serverThreadBinder.getCurrentServerSpan)
     } else {
       None
