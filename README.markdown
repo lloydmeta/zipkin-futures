@@ -4,10 +4,8 @@ Hopefully provides a nice way to use Scala `Future`s with Zipkin tracing.
 
 ATM mostly a wrapper around Brave, but can be extended to use other Zipkin libs by extending `ZipkinServiceLike`.
 
-Also, mostly meant to be used with Play2.
-
 For more information on Zipkin, checkout the [official docs](https://twitter.github.io/zipkin/). This readme and the rest
-of the project assumes that you already have Zipkin infra set up, and know about CS,CR,SS,SR annotations and `Spans` in
+of the project assume that you already have Zipkin infra set up, and know about CS, CR, SS, SR annotations and `Span`s in
 general.
 
 ## SBT
@@ -19,7 +17,7 @@ libraryDependencies ++= Seq(
 )
 ```
 
-If the above does not work because it cannot be resolved, its likely because it hasn't been synced to Maven central yet.
+If the above does not work because it cannot be resolved, it's likely because it hasn't been synced to Maven central yet.
 In that case, download a SNAPSHOT release of the same version by adding this to build.sbt
 
 ```scala
@@ -31,17 +29,38 @@ libraryDependencies ++= Seq(
 )
 ```
 
-## Example
+## Example usage
 
-*Note* For more (up-to-date) details, refer to the tests.
+### Simple
 
-In both of the following examples, a Zipkin `Span` will be created before the execution of the defined `Future` and
+*Note*: for more (up-to-date) details, refer to the tests.
+
+In general, an existing `Span` and a `ZipkinServiceLike` is expected to be in scope. The dependence on an existing scope
+is because Zipkin traces form a hierarchy; if you don't want to attach the trace of your `Future` to a parent `Span`, then
+simply create an empty `Span`. The `ZipkinServiceLike` is needed to properly handle sending `Spans` to your Zipkin
+collector, but in general there should just be one for a running application. `Zipkin-futures` comes out of the box w/ a
+`BraveZipkinService` that implements `ZipkinServiceLike`.
+
+```scala`
+/*
+ A simple new Span that tells us we have no parent here. This means that any Traces here will be client sent/retrieved
+ Spans that have no parent. If the in-scope Span has a Trace Id and a Span Id, the in-scope Span's Trace Id will be
+ propagated to the Spans generated when tracing and the in-scope Span's id will be set as parent span id as well.
+*/
+implicit val span = new Span()
+// Using a simple LoggingSpanCollectorImpl here as an example, but it can be a ZipkinSpanCollector that actually sends spans
+implicit val zipkinService = new BraveZipkinService("localhost", 9000, "testing", new LoggingSpanCollectorImpl("application"))
+
+val myTracedFuture1 = TracedFuture("slowHttpCall") //etc
+``
+
+In both of the following examples, a new Zipkin `Span` will be created before the execution of the defined `Future` and
 marked with a client-sent annotation (as well as the initially provided var arg annotations). Upon the completion of
 the `Future`, the generated `Span` will be marked with a client-received annotation and sent to the Zipkin collector.
 
 ```scala
 
-// Simple tracing
+// Simple tracing w/ a block that takes the newly generated Option[Span]
 val myTracedFuture1 = TracedFuture("slowHttpCall") { maybeSpan =>
   val forwardHeaders = maybeSpan.fold(Seq.empty[(String,String)]){ toHttpHeaders }
   WS.url("myServer").withHeaders(forwardHeaders:_*)
@@ -55,16 +74,33 @@ val myTracedFuture2 = TracedFuture.endAnnotations("slowHttpCall") { maybeSpan =>
   }
 }
 
+import com.beachape.zipkin.FutureEnrichments._ // Sugar
+
+// If you don't need access to the newly generated Span, syntactic sugar can be nice.
+Future { Ok(expensiveResult) } trace ("expensive-process")
+
 ```
 
-## Example with Play
+### With Play
 
-An example of how this can be used within a Play 2 app. *Note* Use without a Play app is possible, but you will need to figure
-out how to provide an implicit `Span` to the trace function.
+`"com.beachape" %% "zipkin-futures-play"` defines a `zipkin-futures-play` dependency that helps trace Futures within
+the context of an HTTP Play server.
+
+The main addition is that there is a Global Filter that takes into account existing HTTP Zipkin headers on incoming
+requests (if they exist and define a `Span`, it will be used as a parent Span for the server trace), sends Server
+Received/Sent `Span`s, and propagates new Zipkin header values into your app (by putting them in the Request headers).
+
+In addition, by extending `ReqHeaderToSpanImplicit` or importing the implicit, wherever you have an implicit `RequestHeader`,
+you can easily pull a parent `Span` into scope if one exists. This means that if you use put the included Filter in your app
+and your Actions have implicit requests in scope, this project will help automate making a "server" `Span`, propagating
+it to your controllers, and making the included Future tracing functions use `Span`s that are children of the "server" `Span`.
+For more info, please refer to the tests.
+
+#### Example
 
 In `Global.scala` add a filter that looks for Zipkin headers in the incoming request if they're there, sends Spans to
- Zipkin with ServerReceived and ServerSent annotations once a result has come back up the set of filters, and
- injects Zipkin headers into the incoming request for other filters and controller actions.
+Zipkin with ServerReceived and ServerSent annotations once a result has come back up the set of filters, and injects
+Zipkin headers into the incoming request for other filters and controller actions.
 
 ```scala
 object Global
@@ -73,15 +109,12 @@ object Global
 ```
 
 In your controllers or action filters, (e.g. in Application.scala), import the `RequestHeader` to `Span` converter and
-the enrichment to `Future`.
+trace your `Future`s!
 
 ```scala
-import com.beachape.zipkin.Implicits._
-import com.beachape.zipkin.FutureEnrichments._
+class Application(implicit zipkinService: ZipkinServiceLike) extends Controller with ReqHeaderToSpanImplicit {
 
-class Application(implicit zipkinService: ZipkinServiceLike) extends Controller {
-
-  import play.api.libs.concurrent.Execution.Implicits._
+  import com.beachape.zipkin.FutureEnrichments._
 
   def index = Action.async { implicit req =>
     // Syntactic sugar
