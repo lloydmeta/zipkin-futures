@@ -22,7 +22,7 @@ import scala.util.Failure
  *   4. Upon completion of the request, adds a ServerSent annotation to the [[Span]] and sends it to the Zipkin Collector
  *
  */
-class ZipkinHeaderFilter(zipkinServiceFactory: => ZipkinServiceLike) extends Filter {
+class ZipkinHeaderFilter(zipkinServiceFactory: => ZipkinServiceLike, reqHeaderToSpanName: RequestHeader => String) extends Filter {
 
   import play.api.libs.concurrent.Execution.Implicits._
   import Implicits._
@@ -30,7 +30,7 @@ class ZipkinHeaderFilter(zipkinServiceFactory: => ZipkinServiceLike) extends Fil
   private implicit lazy val zipkinService = zipkinServiceFactory
 
   def apply(nextFilter: (RequestHeader) => Future[Result])(req: RequestHeader): Future[Result] = {
-    val parentSpan = zipkinService.generateSpan(req.path, req2span(req))
+    val parentSpan = zipkinService.generateSpan(reqHeaderToSpanName(req), req2span(req))
     val fMaybeServerSpan = zipkinService.serverReceived(parentSpan)
     fMaybeServerSpan flatMap {
       case None => nextFilter(req)
@@ -62,7 +62,13 @@ object ZipkinHeaderFilter {
 
   /**
    * Provides sugar for creating a new [[ZipkinHeaderFilter]]
+   *
+   * @param zipkinServiceFactory this will be used to instantiate a [[ZipkinServiceLike]] to be used with this filter.
+   *                             It is called a "factory" to emphasise the fact that it will be lazily instantiated
+   *                             so that it is safe depend on a running app.
+   * @param reqHeaderToSpanName a method for turning a [[RequestHeader]] into a [[Span]] name. By default just uses the
+   *                            [[RequestHeader]]#path
    */
-  def apply(zipkinServiceFactory: => ZipkinServiceLike): ZipkinHeaderFilter =
-    new ZipkinHeaderFilter(zipkinServiceFactory)
+  def apply(zipkinServiceFactory: => ZipkinServiceLike, reqHeaderToSpanName: RequestHeader => String = _.path): ZipkinHeaderFilter =
+    new ZipkinHeaderFilter(zipkinServiceFactory, reqHeaderToSpanName)
 }

@@ -75,4 +75,33 @@ class ZipkinHeaderFilterSpec
 
   }
 
+  describe("using custom request header to span name") {
+
+    it("should send ss/sr spans with the request path by default") {
+      val collector = new DummyCollector
+      val filter = ZipkinHeaderFilter(new BraveZipkinService("localhost", 123, "testing-filter", collector))
+      val fResult = filter.apply(headersToString)(FakeRequest("GET", "lalala/wereeeeeeeeerd"))
+      whenReady(fResult) { _ =>
+        eventually { collector.collected().size shouldBe 1 }
+        val collectedSpans = collector.collected()
+        collectedSpans.size shouldBe 1
+        val span = collectedSpans.head
+        span.getName shouldBe "lalala/wereeeeeeeeerd"
+      }
+    }
+
+    it("should send ss/sr spans with customised names if a method is provided") {
+      val collector = new DummyCollector
+      val filter = ZipkinHeaderFilter(new BraveZipkinService("localhost", 123, "testing-filter", collector), req => s"${req.method}-${req.path}")
+      val fResult = filter.apply(headersToString)(FakeRequest("GET", "/beachape/1"))
+      whenReady(fResult) { _ =>
+        eventually { collector.collected().size shouldBe 1 }
+        val collectedSpans = collector.collected()
+        collectedSpans.size shouldBe 1
+        val span = collectedSpans.head
+        span.getName shouldBe "GET-/beachape/1"
+      }
+    }
+  }
+
 }
