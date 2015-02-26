@@ -53,8 +53,8 @@ class BraveZipkinService(hostIp: String,
 
   def serverSent(span: ServerSpan, annotations: (String, String)*): Future[Option[ServerSpan]] = {
     if (shouldSend(span.getSpan)) Future {
-      annotations.foreach { case (key, value) => serverTracer.submitBinaryAnnotation(key, value) }
       serverThreadBinder.setCurrentSpan(span)
+      annotations.foreach { case (key, value) => serverTracer.submitBinaryAnnotation(key, value) }
       serverTracer.setServerSend()
       Some(span)
     }
@@ -66,8 +66,8 @@ class BraveZipkinService(hostIp: String,
   def clientSent(span: Span, annotations: (String, String)*): Future[Option[ClientSpan]] = {
     if (shouldSend(span)) Future {
       clientThreadBinder.setCurrentSpan(span)
-      clientTracer.setClientSent()
       annotations.foreach { case (key, value) => clientTracer.submitBinaryAnnotation(key, value) }
+      clientTracer.setClientSent()
       Some(span)
     }
     else {
