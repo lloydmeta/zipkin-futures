@@ -104,7 +104,7 @@ trait ZipkinServiceLike {
    * Turns a [[Span]] into a Map[String, String].
    *
    * The keys of the map are the official Zipkin id Header strings (e.g. X-B3-TraceId), and the
-   * values are the hexidecimal string versions of those strings.
+   * values are the hexadecimal string versions of those strings.
    *
    * Useful turning a [[Span]] into a data structure that can be more easily serialised in
    * order to be passed onto other systems via some kind of transport protocol.
