@@ -24,7 +24,6 @@ trait ReqHeaderToSpanImplicit {
     def ghettoBind(headerKey: HttpHeaders.Value): Option[Long] = for {
       idString <- req.headers.get(headerKey.toString)
       id <- Try(hexStringToLong(idString)).toOption
-      if id != 0
     } yield id
     ghettoBind(TraceIdHeaderKey).foreach(span.setTrace_id)
     ghettoBind(SpanIdHeaderKey).foreach(span.setId)

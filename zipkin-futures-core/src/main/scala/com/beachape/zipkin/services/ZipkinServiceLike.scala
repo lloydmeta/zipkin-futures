@@ -76,7 +76,7 @@ trait ZipkinServiceLike {
     val newSpan = new Span()
     newSpan.setId(newId)
     newSpan.setName(name)
-    if (Option(parent.getTrace_id).filterNot(_ == 0).isDefined && Option(parent.getId).filterNot(_ == 0).isDefined) {
+    if (parent.isSetTrace_id && parent.isSetId) {
       newSpan.setTrace_id(parent.getTrace_id)
       newSpan.setParent_id(parent.getId)
     } else {
@@ -104,7 +104,7 @@ trait ZipkinServiceLike {
    * Turns a [[Span]] into a Map[String, String].
    *
    * The keys of the map are the official Zipkin id Header strings (e.g. X-B3-TraceId), and the
-   * values are the hexadecimal string versions of those strings.
+   * values are the hexadecimal string versions of those ids.
    *
    * Useful turning a [[Span]] into a data structure that can be more easily serialised in
    * order to be passed onto other systems via some kind of transport protocol.
@@ -112,11 +112,11 @@ trait ZipkinServiceLike {
   def spanToIdsMap(span: Span): Map[String, String] = {
     import HttpHeaders._
     Seq(
-      (Option(span.getTrace_id), TraceIdHeaderKey),
-      (Option(span.getId), SpanIdHeaderKey),
-      (Option(span.getParent_id), ParentIdHeaderKey)
+      (if (span.isSetTrace_id) Some(span.getTrace_id) else None, TraceIdHeaderKey),
+      (if (span.isSetId) Some(span.getId) else None, SpanIdHeaderKey),
+      (if (span.isSetParent_id) Some(span.getParent_id) else None, ParentIdHeaderKey)
     ).foldLeft(Map.empty[String, String]) {
-        case (acc, (Some(id), headerKey)) if id != 0L => acc + (headerKey.toString -> longToHexString(id))
+        case (acc, (Some(id), headerKey)) => acc + (headerKey.toString -> longToHexString(id))
         case (acc, _) => acc
       }
   }
