@@ -31,7 +31,7 @@ class ZipkinHeaderFilter(zipkinServiceFactory: => ZipkinServiceLike, reqHeaderTo
 
   def apply(nextFilter: (RequestHeader) => Future[Result])(req: RequestHeader): Future[Result] = {
     val parentSpan = zipkinService.generateSpan(reqHeaderToSpanName(req), req2span(req))
-    val fMaybeServerSpan = zipkinService.serverReceived(parentSpan)
+    val fMaybeServerSpan = zipkinService.serverReceived(parentSpan).recover { case NonFatal(e) => None }
     fMaybeServerSpan flatMap {
       case None => nextFilter(req)
       case Some(serverSpan) => {
@@ -42,8 +42,6 @@ class ZipkinHeaderFilter(zipkinServiceFactory: => ZipkinServiceLike, reqHeaderTo
         }
         fResult
       }
-    } recoverWith {
-      case NonFatal(e) => nextFilter(req)
     }
   }
 
