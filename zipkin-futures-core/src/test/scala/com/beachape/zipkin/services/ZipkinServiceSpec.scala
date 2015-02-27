@@ -70,6 +70,8 @@ class ZipkinServiceSpec extends FunSpec with Matchers {
 
   describe("#spanToIdsMap") {
 
+    def longToHexString(l: Long): String = java.lang.Long.toHexString(l)
+
     it("should return an empty map if all the ids are zero (not set according to Zipkin conventions)") {
       val map = subject.spanToIdsMap(new Span())
       map shouldBe 'empty
@@ -81,9 +83,9 @@ class ZipkinServiceSpec extends FunSpec with Matchers {
       span.setTrace_id(456)
       span.setParent_id(789)
       val map = subject.spanToIdsMap(span)
-      map(HttpHeaders.SpanIdHeaderKey.toString) shouldBe ("123")
-      map(HttpHeaders.TraceIdHeaderKey.toString) shouldBe ("456")
-      map(HttpHeaders.ParentIdHeaderKey.toString) shouldBe ("789")
+      map(HttpHeaders.SpanIdHeaderKey.toString) shouldBe longToHexString(123)
+      map(HttpHeaders.TraceIdHeaderKey.toString) shouldBe longToHexString(456)
+      map(HttpHeaders.ParentIdHeaderKey.toString) shouldBe longToHexString(789)
     }
 
   }

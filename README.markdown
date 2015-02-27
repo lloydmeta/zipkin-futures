@@ -41,7 +41,7 @@ simply create an empty `Span`. The `ZipkinServiceLike` is needed to properly han
 collector, but in general there should just be one for a running application. `Zipkin-futures` comes out of the box w/ a
 `BraveZipkinService` that implements `ZipkinServiceLike`.
 
-```scala`
+```scala
 /*
  A simple new Span that tells us we have no parent here. This means that any Traces here will be client sent/retrieved
  Spans that have no parent. If the in-scope Span has a Trace Id and a Span Id, the in-scope Span's Trace Id will be
@@ -52,7 +52,7 @@ implicit val span = new Span()
 implicit val zipkinService = new BraveZipkinService("localhost", 9000, "testing", new LoggingSpanCollectorImpl("application"))
 
 val myTracedFuture1 = TracedFuture("slowHttpCall") //etc
-``
+```
 
 In both of the following examples, a new Zipkin `Span` will be created before the execution of the defined `Future` and
 marked with a client-sent annotation (as well as the initially provided var arg annotations). Upon the completion of

@@ -101,7 +101,10 @@ trait ZipkinServiceLike {
   def clientSpanToSpan(clientSpan: ClientSpan): Span
 
   /**
-   * Turns a [[Span]] into a Map[String, String]
+   * Turns a [[Span]] into a Map[String, String].
+   *
+   * The keys of the map are the official Zipkin id Header strings (e.g. X-B3-TraceId), and the
+   * values are the hexidecimal string versions of those strings.
    *
    * Useful turning a [[Span]] into a data structure that can be more easily serialised in
    * order to be passed onto other systems via some kind of transport protocol.
@@ -113,19 +116,19 @@ trait ZipkinServiceLike {
       (Option(span.getId), SpanIdHeaderKey),
       (Option(span.getParent_id), ParentIdHeaderKey)
     ).foldLeft(Map.empty[String, String]) {
-        case (acc, (Some(id), headerKey)) if id != 0L => acc + (headerKey.toString -> id.toString)
+        case (acc, (Some(id), headerKey)) if id != 0L => acc + (headerKey.toString -> longToHexString(id))
         case (acc, _) => acc
       }
   }
+
+  private def longToHexString(id: Long): String = java.lang.Long.toHexString(id)
 
   /**
    * Determines if the [[Span]] is minimally sendable to Zipkin (has an id, has a trace id, and has a
    * non-empty name)
    */
   protected[services] def sendableSpan(span: Span): Boolean = {
-    !(Option(span.getId).filterNot(_ == 0).isEmpty ||
-      Option(span.getTrace_id).filterNot(_ == 0).isEmpty ||
-      Option(span.getName).filterNot(_.isEmpty).isEmpty)
+    span.isSetId && span.isSetTrace_id && span.isSetName && span.getName.nonEmpty
   }
 
 }

@@ -1,5 +1,7 @@
 package com.beachape.zipkin
 
+import java.math.BigInteger
+
 import com.twitter.zipkin.gen.Span
 import play.api.mvc.RequestHeader
 
@@ -16,9 +18,12 @@ trait ReqHeaderToSpanImplicit {
   implicit def req2span(implicit req: RequestHeader): Span = {
     val span = new Span
     import HttpHeaders._
+    def hexStringToLong(s: String): Long = {
+      new BigInteger(s, 16).longValue()
+    }
     def ghettoBind(headerKey: HttpHeaders.Value): Option[Long] = for {
       idString <- req.headers.get(headerKey.toString)
-      id <- Try(idString.toLong).toOption
+      id <- Try(hexStringToLong(idString)).toOption
       if id != 0
     } yield id
     ghettoBind(TraceIdHeaderKey).foreach(span.setTrace_id)
