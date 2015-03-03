@@ -34,6 +34,15 @@ trait TracedOp {
    * synchronous tracing method to use, as it does not block the current thread in waiting for the [[Span]] to be
    * produced by the in-scope [[ZipkinServiceLike]]
    *
+   * Example:
+   *
+   * {{{
+   * TracedOp.simple("sleepy", "boom" -> "shakalaka") {
+   *   Thread.sleep(2000.millis.toMillis)
+   *   3
+   * }
+   * }}}
+   *
    * @param traceName the name for the span used for tracing
    * @param annotations variable list of annotations to send for tracing in the beginning (after the client sent
    *                    annotation)
@@ -79,6 +88,13 @@ trait TracedOp {
    * Note, the [[Span]] given to your function should not be mutated to affect tracing. It is a deep copy anyways, so
    * there will be no effect.
    *
+   * {{{
+   * TracedOp("sleepy", "boom" -> "shakalaka") { maybeSpan =>
+   *   Thread.sleep(2000.millis.toMillis)
+   *   3
+   * }
+   * }}}
+   *
    * @param traceName the name for the span used for tracing
    * @param annotations variable list of annotations to send for tracing in the beginning (after the client sent
    *                    annotation)
@@ -105,6 +121,13 @@ trait TracedOp {
    *
    * Note, the [[Span]] given to your function should not be mutated to affect tracing. It is a deep copy anyways, so
    * there will be no effect.
+   *
+   * {{{
+   * TracedOp.endAnnotations("sleepy", "boom" -> "shakalaka") { maybeSpan =>
+   *   Thread.sleep(2000.millis.toMillis)
+   *   (3, Seq("finished-with" -> "3")) // end annotations
+   * }
+   * }}}
    *
    * @param traceName the name for the span used for tracing
    * @param annotations variable list of annotations to send for tracing in the beginning (after the client sent
