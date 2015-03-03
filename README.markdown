@@ -1,6 +1,6 @@
 # Zipkin-futures [![Build Status](https://travis-ci.org/lloydmeta/zipkin-futures.svg?branch=master)](https://travis-ci.org/lloydmeta/zipkin-futures) [![Coverage Status](https://coveralls.io/repos/lloydmeta/zipkin-futures/badge.svg)](https://coveralls.io/r/lloydmeta/zipkin-futures)
 
-Hopefully provides a nice way to use Scala `Future`s with Zipkin tracing.
+Hopefully provides a nice way to use Scala `Future`s (also supports synchronous operation tracing via `TracedOp`) with Zipkin tracing.
 
 ATM mostly a wrapper around Brave, but can be extended to use other Zipkin libs by extending `ZipkinServiceLike`.
 
@@ -59,6 +59,8 @@ marked with a client-sent annotation (as well as the initially provided var arg 
 the `Future`, the generated `Span` will be marked with a client-received annotation and sent to the Zipkin collector.
 
 ```scala
+// Synchronous op tracing
+val traced = TracedOp.simple("slow") { calculate }
 
 // Simple tracing w/ a block that takes the newly generated Option[Span]
 val myTracedFuture1 = TracedFuture("slowHttpCall") { maybeSpan =>

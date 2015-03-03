@@ -17,7 +17,7 @@ object TracedFuture {
    * at the beginning). The Option[Span] parameter is so that you can pass the span details to other systems in
    * your Future-producing function.
    *
-   * This function expects that there is a parent [[Span]] in scope. If there is even is a [[Span]]
+   * This function expects that there is a parent [[Span]] in scope. Even if there is a [[Span]]
    * in scope, it may not be used as a Parent [[Span]] if it does not have the proper ids, namely
    * a span id and a trace id. In this case, a new scope with the given name and new ids will be used
    * and it will not have a parent id.
@@ -50,13 +50,13 @@ object TracedFuture {
   }
 
   /**
-   * Does tracing of a Option[Span] => Future[(A, Seq[(String, String)]] based on the given trace name and annotations (annotations are sent
-   * at the beginning). The Option[Span] parameter is so that you can pass the span details to other systems in
-   * your Future-producing function. Note that this function expects the a Future [[Tuple2]] result, where the second
-   * element in the pair is a Seq[(String, String)] set of annotations that you might want to use in order to
-   * set final annotations on the span.
+   * Does tracing of a Option[Span] => Future[(A, Seq[(String, String)]] based on the given trace name and annotations
+   * (annotations are sent at the beginning). The Option[Span] parameter is so that you can pass the span details to
+   * other systems in your Future-producing function. Note that this function expects the a Future [[Tuple2]] result,
+   * where the second element in the pair is a Seq[(String, String)] set of annotations that you might want to use
+   * in order to set final annotations on the span.
    *
-   * This function expects that there is a parent [[Span]] in scope. If there is even is a [[Span]]
+   * This function expects that there is a parent [[Span]] in scope. Even if there is a [[Span]]
    * in scope, it may not be used as a Parent [[Span]] if it does not have the proper ids, namely
    * a span id and a trace id. In this case, a new scope with the given name and new ids will be used
    * and it will not have a parent id.
@@ -99,7 +99,7 @@ object TracedFuture {
       maybeSentCustomSpan foreach { sentCustomSpan =>
         fResult.onComplete {
           case Success((_, endAnnotations)) => zipkinService.clientReceived(sentCustomSpan, endAnnotations: _*)
-          case Failure(e) => zipkinService.clientReceived(sentCustomSpan, "failed" -> s"Finished with exception: ${e.getMessage}")
+          case Failure(e) => zipkinService.clientReceived(sentCustomSpan, "failed" -> s"Finished with exception${Option(e.getMessage).fold("") { m => s": $m" }}")
         }
       }
     }
