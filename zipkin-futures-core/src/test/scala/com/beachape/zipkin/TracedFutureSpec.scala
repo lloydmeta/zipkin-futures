@@ -56,6 +56,31 @@ class TracedFutureSpec extends FunSpec
         }
       }
 
+      it("should send spans even on failure of the op while forwarding the exception to the caller, adding a failed annotation at the end") {
+        implicit val (collector, zipkin) = subjects()
+        implicit val span = new Span()
+        val i = TracedFuture("sleepy", "boom" -> "shakalaka") { maybeSpan =>
+          Thread.sleep(2000.millis.toMillis)
+          Future.failed(new IllegalAccessException)
+        }
+        whenReady(i.failed) { i =>
+          eventually { collector.collected().size shouldBe 1 }
+          val collected = collector.collected()
+          collected.size shouldBe 1
+          val collectedSpan = collected.head
+          val annotations = collectedSpan.getAnnotations.asScala
+          annotations.map(_.getValue) should contain allOf ("cs", "cr")
+          val csTime = annotations.find(_.getValue == "cs").head
+          val crTime = annotations.find(_.getValue == "cr").head
+          val diff = crTime.getTimestamp - csTime.getTimestamp
+          diff.microseconds.toMicros should be(2000.millis.toMicros +- 300.millis.toMicros)
+          val binaryAnnotations = collectedSpan.getBinary_annotations.asScala
+          binaryAnnotations.size shouldBe 2
+          binaryAnnotations.map(_.getKey) should contain allOf ("boom", "failed")
+          binaryAnnotations.map(a => new String(a.getValue)) should contain("shakalaka")
+        }
+      }
+
     }
 
     describe(".endAnnotations") {
@@ -82,6 +107,31 @@ class TracedFutureSpec extends FunSpec
           binaryAnnotations.size shouldBe 2
           binaryAnnotations.map(_.getKey) should contain allOf ("Toronto", "Shibuya")
           binaryAnnotations.map(a => new String(a.getValue)) should contain allOf ("Kinshicho", "Mitaka")
+        }
+      }
+
+      it("should send spans even on failure of the op while forwarding the exception to the caller, adding a failed annotation at the end") {
+        implicit val (collector, zipkin) = subjects()
+        implicit val span = new Span()
+        val i = TracedFuture.endAnnotations("sleepy", "Toronto" -> "Kinshicho") { maybeSpan =>
+          Thread.sleep(2000.millis.toMillis)
+          Future.failed(new IllegalAccessException)
+        }
+        whenReady(i.failed) { i =>
+          eventually { collector.collected().size shouldBe 1 }
+          val collected = collector.collected()
+          collected.size shouldBe 1
+          val collectedSpan = collected.head
+          val annotations = collectedSpan.getAnnotations.asScala
+          annotations.map(_.getValue) should contain allOf ("cs", "cr")
+          val csTime = annotations.find(_.getValue == "cs").head
+          val crTime = annotations.find(_.getValue == "cr").head
+          val diff = crTime.getTimestamp - csTime.getTimestamp
+          diff.microseconds.toMicros should be(2000.millis.toMicros +- 300.millis.toMicros)
+          val binaryAnnotations = collectedSpan.getBinary_annotations.asScala
+          binaryAnnotations.size shouldBe 2
+          binaryAnnotations.map(_.getKey) should contain allOf ("Toronto", "failed")
+          binaryAnnotations.map(a => new String(a.getValue)) should contain("Kinshicho")
         }
       }
 

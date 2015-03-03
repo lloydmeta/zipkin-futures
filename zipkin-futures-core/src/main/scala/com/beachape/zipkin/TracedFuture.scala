@@ -99,7 +99,7 @@ object TracedFuture {
       maybeSentCustomSpan foreach { sentCustomSpan =>
         fResult.onComplete {
           case Success((_, endAnnotations)) => zipkinService.clientReceived(sentCustomSpan, endAnnotations: _*)
-          case Failure(e) => zipkinService.clientReceived(sentCustomSpan, "failed" -> s"Finished with exception: ${e.getMessage}")
+          case Failure(e) => zipkinService.clientReceived(sentCustomSpan, "failed" -> s"Finished with exception${Option(e.getMessage).fold("") { m => s": $m" }}")
         }
       }
     }

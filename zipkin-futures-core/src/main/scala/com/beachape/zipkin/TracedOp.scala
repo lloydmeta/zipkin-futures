@@ -56,7 +56,7 @@ trait TracedOp {
       case Failure(e) => {
         fMaybeSentCustomSpan.foreach { maybeSent =>
           maybeSent foreach { span =>
-            zipkinService.clientReceived(span, "failed" -> s"Finished with exception: ${e.getMessage}")
+            zipkinService.clientReceived(span, "failed" -> s"Finished with exception${Option(e.getMessage).fold("") { m => s": $m" }}")
           }
         }
         throw e
@@ -130,7 +130,7 @@ trait TracedOp {
       case Failure(e) => {
         fMaybeSentCustomSpan.foreach { maybeActuallySent =>
           maybeActuallySent orElse maybeSentProvided foreach { span =>
-            zipkinService.clientReceived(span, "failed" -> s"Finished with exception: ${e.getMessage}")
+            zipkinService.clientReceived(span, "failed" -> s"Finished with exception${Option(e.getMessage).fold("") { m => s": $m" }}")
           }
         }
         throw e
