@@ -15,15 +15,22 @@ import scala.concurrent.{ ExecutionContext, Future }
  * objects that need tracing.
  *
  * @param collector a [[SpanCollector]]
- * @param traceFilters a List of span name filters. List can be empty if you don't want trace filtering (sampling).
- *                     The trace filters will be executed in order. If one returns false there will not be tracing and
- *                     the next trace filters will not be executed anymore.
+ * @param clientTraceFilters a List of span filters for client spans. List can be empty if you don't want trace filtering (sampling).
+ *                           The trace filters will be executed in order. If one returns false there will not be tracing and
+ *                           the next trace filters will not be executed anymore.
+ *
+ *                           In a typical server-side app, it might be a good idea to have a `{ s => s.isSetParent_id }` in here
+ *                           in case you want to make sure no orphaned client-spans get sent.
+ * @param serverTraceFilters List of span filters for client spans. List can be empty if you don't want trace filtering (sampling).
+ *                           The trace filters will be executed in order. If one returns false there will not be tracing and
+ *                           the next trace filters will not be executed anymore.
  */
 class BraveZipkinService(hostIp: String,
                          hostPort: Int,
                          serviceName: String,
                          collector: SpanCollector,
-                         traceFilters: Seq[String => Boolean] = Seq.empty)(implicit val eCtx: ExecutionContext)
+                         clientTraceFilters: Seq[Span => Boolean] = Seq.empty,
+                         serverTraceFilters: Seq[Span => Boolean] = Seq.empty)(implicit val eCtx: ExecutionContext)
     extends ZipkinServiceLike {
 
   type ServerSpan = brave.ServerSpan
@@ -52,7 +59,7 @@ class BraveZipkinService(hostIp: String,
   }
 
   def serverSent(span: ServerSpan, annotations: (String, String)*): Future[Option[ServerSpan]] = {
-    if (shouldSend(span.getSpan)) Future {
+    if (shouldSendServer(serverSpanToSpan(span))) Future {
       serverThreadBinder.setCurrentSpan(span)
       annotations.foreach { case (key, value) => serverTracer.submitBinaryAnnotation(key, value) }
       serverTracer.setServerSend()
@@ -64,7 +71,7 @@ class BraveZipkinService(hostIp: String,
   }
 
   def clientSent(span: Span, annotations: (String, String)*): Future[Option[ClientSpan]] = {
-    if (shouldSend(span)) Future {
+    if (shouldSendClient(span)) Future {
       clientThreadBinder.setCurrentSpan(span)
       clientTracer.setClientSent()
       annotations.foreach { case (key, value) => clientTracer.submitBinaryAnnotation(key, value) }
@@ -76,7 +83,7 @@ class BraveZipkinService(hostIp: String,
   }
 
   def clientReceived(span: ClientSpan, annotations: (String, String)*): Future[Option[ClientSpan]] = {
-    if (shouldSend(span)) Future {
+    if (shouldSendClient(span)) Future {
       clientThreadBinder.setCurrentSpan(span)
       annotations.foreach { case (key, value) => clientTracer.submitBinaryAnnotation(key, value) }
       clientTracer.setClientReceived()
@@ -90,8 +97,14 @@ class BraveZipkinService(hostIp: String,
   /*
    * Returns true if the span is not supposed to be filtered out
    */
-  private[this] def shouldSend(span: Span): Boolean = {
-    sendableSpan(span) && traceFilters.forall(_.apply(span.getName))
+  private[this] def shouldSendClient(span: Span): Boolean = {
+    val spanCopy = span.deepCopy()
+    sendableSpan(spanCopy) && clientTraceFilters.forall(_.apply(spanCopy))
+  }
+
+  private[this] def shouldSendServer(span: Span): Boolean = {
+    val spanCopy = span.deepCopy()
+    sendableSpan(spanCopy) && serverTraceFilters.forall(_.apply(spanCopy))
   }
 
   /*
@@ -100,7 +113,7 @@ class BraveZipkinService(hostIp: String,
    * Returns None if the passed in [[Span]] should not be sent or is otherwise not clean.
    */
   private[this] def existingServerSpan(span: Span): Option[ServerSpan] = {
-    if (shouldSend(span)) {
+    if (shouldSendServer(span)) {
       serverTracer.setStateCurrentTrace(span.getTrace_id, span.getId, if (span.isSetParent_id) span.getParent_id else null, span.getName)
       Some(serverThreadBinder.getCurrentServerSpan)
     } else {
