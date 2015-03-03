@@ -45,7 +45,7 @@ class FutureEnrichmentSpec
         val csTime = annotations.find(_.getValue == "cs").head
         val crTime = annotations.find(_.getValue == "cr").head
         val diff = crTime.getTimestamp - csTime.getTimestamp
-        diff.microseconds.toMicros should be(2000.millis.toMicros +- 200.millis.toMicros)
+        diff.microseconds.toMicros should be(2000.millis.toMicros +- 300.millis.toMicros)
       }
     }
 

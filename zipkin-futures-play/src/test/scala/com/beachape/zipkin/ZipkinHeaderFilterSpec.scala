@@ -69,7 +69,7 @@ class ZipkinHeaderFilterSpec
         annotations(0).getValue should be("sr")
         annotations(1).getValue should be("ss")
         val diff = annotations(1).getTimestamp - annotations(0).getTimestamp
-        diff.microseconds.toMicros should be(2000.millis.toMicros +- 200.millis.toMicros)
+        diff.microseconds.toMicros should be(2000.millis.toMicros +- 300.millis.toMicros)
       }
     }
 

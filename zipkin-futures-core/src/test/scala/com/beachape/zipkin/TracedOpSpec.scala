@@ -44,7 +44,7 @@ class TracedOpSpec extends FunSpec
         val csTime = annotations.find(_.getValue == "cs").head
         val crTime = annotations.find(_.getValue == "cr").head
         val diff = crTime.getTimestamp - csTime.getTimestamp
-        diff.microseconds.toMicros should be(2000.millis.toMicros +- 200.millis.toMicros)
+        diff.microseconds.toMicros should be(2000.millis.toMicros +- 300.millis.toMicros)
         val binaryAnnotations = collectedSpan.getBinary_annotations.asScala
         binaryAnnotations.size shouldBe 1
         binaryAnnotations.map(_.getKey) should contain("boom")
@@ -73,7 +73,7 @@ class TracedOpSpec extends FunSpec
         val csTime = annotations.find(_.getValue == "cs").head
         val crTime = annotations.find(_.getValue == "cr").head
         val diff = crTime.getTimestamp - csTime.getTimestamp
-        diff.microseconds.toMicros should be(2000.millis.toMicros +- 200.millis.toMicros)
+        diff.microseconds.toMicros should be(2000.millis.toMicros +- 300.millis.toMicros)
 
         val binaryAnnotations = collectedSpan.getBinary_annotations.asScala
         binaryAnnotations.size shouldBe 1
@@ -102,7 +102,7 @@ class TracedOpSpec extends FunSpec
         val csTime = annotations.find(_.getValue == "cs").head
         val crTime = annotations.find(_.getValue == "cr").head
         val diff = crTime.getTimestamp - csTime.getTimestamp
-        diff.microseconds.toMicros should be(2000.millis.toMicros +- 200.millis.toMicros)
+        diff.microseconds.toMicros should be(2000.millis.toMicros +- 300.millis.toMicros)
         val binaryAnnotations = collectedSpan.getBinary_annotations.asScala
         binaryAnnotations.size shouldBe 2
         binaryAnnotations.map(_.getKey) should contain allOf ("Toronto", "Shibuya")
