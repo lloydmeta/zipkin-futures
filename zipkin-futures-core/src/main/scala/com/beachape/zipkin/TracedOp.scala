@@ -5,7 +5,7 @@ import com.twitter.zipkin.gen.Span
 
 import scala.concurrent.duration._
 import scala.concurrent.Await
-import scala.util.Try
+import scala.util.{ Failure, Success, Try }
 import scala.util.control.NonFatal
 
 /**
@@ -43,13 +43,25 @@ trait TracedOp {
     import zipkinService.eCtx
     val childSpan = zipkinService.generateSpan(traceName, parentSpan)
     val fMaybeSentCustomSpan = zipkinService.clientSent(childSpan, annotations: _*).recover { case NonFatal(e) => None }
-    val result = f
-    fMaybeSentCustomSpan.foreach { maybeSent =>
-      maybeSent foreach { span =>
-        zipkinService.clientReceived(span)
+    val attempt = Try(f)
+    attempt match {
+      case Success(result) => {
+        fMaybeSentCustomSpan.foreach { maybeSent =>
+          maybeSent foreach { span =>
+            zipkinService.clientReceived(span)
+          }
+        }
+        result
+      }
+      case Failure(e) => {
+        fMaybeSentCustomSpan.foreach { maybeSent =>
+          maybeSent foreach { span =>
+            zipkinService.clientReceived(span, "failed" -> s"Finished with exception: ${e.getMessage}")
+          }
+        }
+        throw e
       }
     }
-    result
   }
 
   /**
@@ -105,13 +117,25 @@ trait TracedOp {
     val fMaybeSentCustomSpan = zipkinService.clientSent(childSpan, annotations: _*).recover { case NonFatal(e) => None }
     //Tries to wait for a certain amount of time for the ZipkinService to provide a span to to use
     val maybeSentProvided = Try(Await.result(fMaybeSentCustomSpan, timeout)).getOrElse(None)
-    val result = f(maybeSentProvided.map(zipkinService.clientSpanToSpan(_).deepCopy()))
-    fMaybeSentCustomSpan.foreach { maybeActuallySent =>
-      maybeActuallySent orElse maybeSentProvided foreach { span =>
-        zipkinService.clientReceived(span, result._2: _*)
+    val tryResult = Try(f(maybeSentProvided.map(zipkinService.clientSpanToSpan(_).deepCopy())))
+    tryResult match {
+      case Success(result) => {
+        fMaybeSentCustomSpan.foreach { maybeActuallySent =>
+          maybeActuallySent orElse maybeSentProvided foreach { span =>
+            zipkinService.clientReceived(span, result._2: _*)
+          }
+        }
+        result._1
+      }
+      case Failure(e) => {
+        fMaybeSentCustomSpan.foreach { maybeActuallySent =>
+          maybeActuallySent orElse maybeSentProvided foreach { span =>
+            zipkinService.clientReceived(span, "failed" -> s"Finished with exception: ${e.getMessage}")
+          }
+        }
+        throw e
       }
     }
-    result._1
   }
 
 }
