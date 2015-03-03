@@ -9,9 +9,9 @@ class BraveZipkinServiceSpec extends FunSpec with Matchers with ScalaFutures wit
 
   import scala.concurrent.ExecutionContext.Implicits.global
 
-  def subjects(filters: Seq[String => Boolean] = Seq.empty): (DummyCollector, BraveZipkinService) = {
+  def subjects(serverfilters: Seq[Span => Boolean] = Seq.empty, clientFilters: Seq[Span => Boolean] = Seq.empty): (DummyCollector, BraveZipkinService) = {
     val collector = new DummyCollector
-    (collector, new BraveZipkinService("localhost", 1234, "testing-only", collector, filters))
+    (collector, new BraveZipkinService("localhost", 1234, "testing-only", collector, clientFilters, serverfilters))
   }
 
   def span(spanId: Option[Long], traceId: Option[Long], name: Option[String]): Span = {
@@ -47,8 +47,8 @@ class BraveZipkinServiceSpec extends FunSpec with Matchers with ScalaFutures wit
       }
     }
 
-    it("should return None if given a Span with a name that is filtered out") {
-      val (_, service) = subjects(Seq({ s => s != "no" }))
+    it("should return None if given a Span that is filtered out") {
+      val (_, service) = subjects(serverfilters = Seq({ s => s.getName != "no" }))
       whenReady(service.serverReceived(span(Some(123), Some(123), Some("no")))) { _ shouldBe None }
     }
 
@@ -146,9 +146,10 @@ class BraveZipkinServiceSpec extends FunSpec with Matchers with ScalaFutures wit
       }
     }
 
-    it("should return None if given a Span with a name that is filtered out") {
-      val (_, service) = subjects(Seq({ s => s != "no" }))
+    it("should return None if given a Span that is filtered out") {
+      val (_, service) = subjects(clientFilters = Seq({ s => s.getName != "no" }, { s => s.isSetParent_id }))
       whenReady(service.clientSent(span(Some(123), Some(123), Some("no")))) { _ shouldBe None }
+      whenReady(service.clientSent(span(Some(123), Some(123), Some("boom")))) { _ shouldBe None }
     }
 
   }

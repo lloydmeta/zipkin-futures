@@ -23,7 +23,7 @@ class FutureEnrichmentSpec
 
     import FutureEnrichment._
 
-    def subjects(filters: Seq[String => Boolean] = Seq.empty): (DummyCollector, BraveZipkinService) = {
+    def subjects(filters: Seq[Span => Boolean] = Seq.empty): (DummyCollector, BraveZipkinService) = {
       val collector = new DummyCollector
       (collector, new BraveZipkinService("localhost", 1234, "testing-only", collector, filters))
     }
