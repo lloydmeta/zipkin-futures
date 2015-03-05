@@ -21,9 +21,13 @@ import scala.concurrent.{ ExecutionContext, Future }
  *
  *                           In a typical server-side app, it might be a good idea to have a `{ s => s.isSetParent_id }` in here
  *                           in case you want to make sure no orphaned client-spans get sent.
+ *
+ *                           *Note* this will only be used for `clientReceived`, not  `clientSent`.
  * @param serverTraceFilters List of span filters for client spans. List can be empty if you don't want trace filtering (sampling).
  *                           The trace filters will be executed in order. If one returns false there will not be tracing and
  *                           the next trace filters will not be executed anymore.
+ *
+ *                           *Note* this will only be used for `serverReceived`, not  `serverSent`.
  */
 class BraveZipkinService(hostIp: String,
                          hostPort: Int,
@@ -58,15 +62,12 @@ class BraveZipkinService(hostIp: String,
     }
   }
 
-  def serverSent(span: ServerSpan, annotations: (String, String)*): Future[Option[ServerSpan]] = {
-    if (shouldSendServer(serverSpanToSpan(span))) Future {
+  def serverSent(span: ServerSpan, annotations: (String, String)*): Future[ServerSpan] = {
+    Future {
       serverThreadBinder.setCurrentSpan(span)
       annotations.foreach { case (key, value) => serverTracer.submitBinaryAnnotation(key, value) }
       serverTracer.setServerSend()
-      Some(span)
-    }
-    else {
-      Future.successful(None)
+      span
     }
   }
 
@@ -82,15 +83,12 @@ class BraveZipkinService(hostIp: String,
     }
   }
 
-  def clientReceived(span: ClientSpan, annotations: (String, String)*): Future[Option[ClientSpan]] = {
-    if (shouldSendClient(span)) Future {
+  def clientReceived(span: ClientSpan, annotations: (String, String)*): Future[ClientSpan] = {
+    Future {
       clientThreadBinder.setCurrentSpan(span)
       annotations.foreach { case (key, value) => clientTracer.submitBinaryAnnotation(key, value) }
       clientTracer.setClientReceived()
-      Some(span)
-    }
-    else {
-      Future.successful(None)
+      span
     }
   }
 

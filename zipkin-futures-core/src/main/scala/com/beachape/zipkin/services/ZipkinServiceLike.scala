@@ -43,7 +43,7 @@ trait ZipkinServiceLike {
    *
    * If annotations are provided, they will also be added.
    */
-  def serverSent(span: ServerSpan, annotations: (String, String)*): Future[Option[ServerSpan]]
+  def serverSent(span: ServerSpan, annotations: (String, String)*): Future[ServerSpan]
 
   /**
    * Creates a [[ClientSpan]] with a ClientSent annotation that will later be used to signal to the Zipkin collector that a Client
@@ -60,7 +60,7 @@ trait ZipkinServiceLike {
    *
    * If annotations are provided, they will also be added.
    */
-  def clientReceived(span: ClientSpan, annotations: (String, String)*): Future[Option[ClientSpan]]
+  def clientReceived(span: ClientSpan, annotations: (String, String)*): Future[ClientSpan]
 
   /**
    * Returns a [[Span]] based on a name and a parent [[Span]], which may or may not be used

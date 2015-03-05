@@ -60,8 +60,7 @@ class BraveZipkinServiceSpec extends FunSpec with Matchers with ScalaFutures wit
       val (_, service) = subjects()
       whenReady(service.serverReceived(span(Some(123), Some(123), Some("blah")))) { r =>
         val Some(serverSpan) = r
-        whenReady(service.serverSent(serverSpan)) { r =>
-          val Some(serverSpan) = r
+        whenReady(service.serverSent(serverSpan)) { serverSpan =>
           val underlyingSpan = serverSpan.getSpan
           val annotations = underlyingSpan.getAnnotations.asScala
           annotations.size shouldBe 2
@@ -75,8 +74,7 @@ class BraveZipkinServiceSpec extends FunSpec with Matchers with ScalaFutures wit
       val (_, service) = subjects()
       whenReady(service.serverReceived(span(Some(123), Some(123), Some("blah")), "i_say" -> "hello", "you_say" -> "goodbye")) { r =>
         val Some(serverSpan) = r
-        whenReady(service.serverSent(serverSpan, "who" -> "what", "when" -> "where")) { r =>
-          val Some(serverSpan) = r
+        whenReady(service.serverSent(serverSpan, "who" -> "what", "when" -> "where")) { serverSpan =>
           val underlyingSpan = serverSpan.getSpan
           val binaryAnnotations = underlyingSpan.getBinary_annotations.asScala
           binaryAnnotations.size shouldBe 4
@@ -160,8 +158,7 @@ class BraveZipkinServiceSpec extends FunSpec with Matchers with ScalaFutures wit
       val (_, service) = subjects()
       whenReady(service.clientSent(span(Some(123), Some(123), Some("blah")))) { r =>
         val Some(clientSpan) = r
-        whenReady(service.clientReceived(clientSpan)) { r =>
-          val Some(clientSpanReceived) = r
+        whenReady(service.clientReceived(clientSpan)) { clientSpanReceived =>
           val annotations = clientSpanReceived.getAnnotations.asScala
           annotations.size shouldBe 2
           annotations(0).getValue shouldBe "cs"
@@ -174,8 +171,7 @@ class BraveZipkinServiceSpec extends FunSpec with Matchers with ScalaFutures wit
       val (_, service) = subjects()
       whenReady(service.clientSent(span(Some(123), Some(123), Some("blah")), "i_say" -> "hello", "you_say" -> "goodbye")) { r =>
         val Some(clientSpan) = r
-        whenReady(service.clientReceived(clientSpan, "who" -> "what", "when" -> "where")) { r =>
-          val Some(clientSpanReceived) = r
+        whenReady(service.clientReceived(clientSpan, "who" -> "what", "when" -> "where")) { clientSpanReceived =>
           val binaryAnnotations = clientSpanReceived.getBinary_annotations.asScala
           binaryAnnotations.size shouldBe 4
           binaryAnnotations.map(a => new String(a.getValue)) should contain allOf ("hello", "goodbye", "what", "where")

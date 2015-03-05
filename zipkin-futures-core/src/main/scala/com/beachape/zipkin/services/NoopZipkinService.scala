@@ -34,17 +34,17 @@ object NoopZipkinService extends ZipkinServiceLike {
     }
   }
 
-  def serverSent(span: ServerSpan, annotations: (String, String)*): Future[Option[ServerSpan]] = {
+  def serverSent(span: ServerSpan, annotations: (String, String)*): Future[ServerSpan] = {
     Future.successful {
       span.addToAnnotations(new Annotation(System.currentTimeMillis(), "ss"))
-      Some(span)
+      span
     }
   }
 
-  def clientReceived(span: ClientSpan, annotations: (String, String)*): Future[Option[ClientSpan]] = {
+  def clientReceived(span: ClientSpan, annotations: (String, String)*): Future[ClientSpan] = {
     Future.successful {
       span.addToAnnotations(new Annotation(System.currentTimeMillis(), "cr"))
-      Some(span)
+      span
     }
   }
 
