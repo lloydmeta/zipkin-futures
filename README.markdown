@@ -1,4 +1,4 @@
-# Zipkin-futures [![Build Status](https://travis-ci.org/lloydmeta/zipkin-futures.svg?branch=master)](https://travis-ci.org/lloydmeta/zipkin-futures) [![Coverage Status](https://coveralls.io/repos/lloydmeta/zipkin-futures/badge.svg)](https://coveralls.io/r/lloydmeta/zipkin-futures)
+# Zipkin-futures [![Build Status](https://travis-ci.org/lloydmeta/zipkin-futures.svg?branch=master)](https://travis-ci.org/lloydmeta/zipkin-futures) [![Coverage Status](https://coveralls.io/repos/lloydmeta/zipkin-futures/badge.svg)](https://coveralls.io/r/lloydmeta/zipkin-futures) [![Codacy Badge](https://www.codacy.com/project/badge/35ba8799c5a1487ca0a7f659a861c944)](https://www.codacy.com/public/lloydmeta/zipkin-futures)
 
 Hopefully provides a nice way to use Scala `Future`s (also supports synchronous operation tracing via `TracedOp`) with Zipkin tracing.
 
