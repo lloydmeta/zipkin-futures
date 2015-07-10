@@ -12,8 +12,8 @@ general.
 
 ```scala
 libraryDependencies ++= Seq(
-    "com.beachape" %% "zipkin-futures" % "0.1.0"  // OR
-    "com.beachape" %% "zipkin-futures-play" % "0.1.0" // if you are using Play and want to use the filter w/ RequestHeader conversions
+    "com.beachape" %% "zipkin-futures" % "0.1.1"  // OR
+    "com.beachape" %% "zipkin-futures-play" % "0.1.1" // if you are using Play and want to use the filter w/ RequestHeader conversions
 )
 ```
 
@@ -24,8 +24,8 @@ In that case, download a SNAPSHOT release of the same version by adding this to 
 resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
 
 libraryDependencies ++= Seq(
-    "com.beachape" %% "zipkin-futures" % "0.1.0-SNAPSHOT" // OR
-    "com.beachape" %% "zipkin-futures-play" % "0.1.0-SNAPSHOT" // if you are using Play and want to use the filter w/ RequestHeader conversions
+    "com.beachape" %% "zipkin-futures" % "0.1.1-SNAPSHOT" // OR
+    "com.beachape" %% "zipkin-futures-play" % "0.1.1-SNAPSHOT" // if you are using Play and want to use the filter w/ RequestHeader conversions
 )
 ```
 
