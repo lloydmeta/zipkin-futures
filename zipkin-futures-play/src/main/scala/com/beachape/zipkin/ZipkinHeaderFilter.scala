@@ -67,6 +67,19 @@ object ZipkinHeaderFilter {
    * @param reqHeaderToSpanName a method for turning a [[RequestHeader]] into a [[Span]] name. By default just uses the
    *                            [[RequestHeader]]#path
    */
-  def apply(zipkinServiceFactory: => ZipkinServiceLike, reqHeaderToSpanName: RequestHeader => String = _.path): ZipkinHeaderFilter =
+  def apply(zipkinServiceFactory: => ZipkinServiceLike, reqHeaderToSpanName: RequestHeader => String = ParamAwareRequestNamer): ZipkinHeaderFilter =
     new ZipkinHeaderFilter(zipkinServiceFactory, reqHeaderToSpanName)
+
+  /**
+   * A convenient default RequestHeader => String transformer that removes unique
+   * param values in the request uri, instead replacing them with their param names
+   * so that all requests to a route get the same Span name.
+   */
+  val ParamAwareRequestNamer: RequestHeader => String = { reqHeader =>
+    import org.apache.commons.lang3.StringUtils
+    val tags = reqHeader.tags
+    val pathPattern = StringUtils.replace(tags.getOrElse(play.api.Routes.ROUTE_PATTERN, reqHeader.path), "<[^/]+>", "")
+    s"${reqHeader.method} - $pathPattern"
+  }
+
 }
