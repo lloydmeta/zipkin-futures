@@ -3,8 +3,8 @@ package com.beachape.zipkin
 import com.beachape.zipkin.services.{ BraveZipkinService, DummyCollector }
 import org.scalatest._
 import org.scalatest.concurrent.{ Eventually, IntegrationPatience, PatienceConfiguration, ScalaFutures }
-import play.api.mvc.{ Results, RequestHeader }
-import play.api.test.FakeRequest
+import play.api.mvc.{ AnyContentAsEmpty, Results, RequestHeader }
+import play.api.test.{ FakeHeaders, FakeRequest }
 import play.api.test.Helpers._
 import scala.collection.JavaConverters._
 import scala.concurrent.duration._
@@ -77,7 +77,7 @@ class ZipkinHeaderFilterSpec
 
   describe("using custom request header to span name") {
 
-    it("should send ss/sr spans with the request path by default") {
+    it("should send ss/sr spans with method and path  by default") {
       val collector = new DummyCollector
       val filter = ZipkinHeaderFilter(new BraveZipkinService("localhost", 123, "testing-filter", collector))
       val fResult = filter.apply(headersToString)(FakeRequest("GET", "lalala/wereeeeeeeeerd"))
@@ -86,7 +86,7 @@ class ZipkinHeaderFilterSpec
         val collectedSpans = collector.collected()
         collectedSpans.size shouldBe 1
         val span = collectedSpans.head
-        span.getName shouldBe "lalala/wereeeeeeeeerd"
+        span.getName shouldBe "GET - lalala/wereeeeeeeeerd"
       }
     }
 
@@ -102,6 +102,26 @@ class ZipkinHeaderFilterSpec
         span.getName shouldBe "GET-/beachape/1"
       }
     }
+  }
+
+  describe("ParamAwareRequestNamer") {
+
+    def reqWithTags(method: String, uri: String, tags: Map[String, String]) = {
+      FakeRequest(method = method, uri = uri, headers = FakeHeaders(), AnyContentAsEmpty, tags = tags)
+    }
+
+    import ZipkinHeaderFilter.ParamAwareRequestNamer
+
+    it("should return a string with method and path if there are no tags") {
+      val r = ParamAwareRequestNamer(FakeRequest("GET", "/boom"))
+      r shouldBe "GET - /boom"
+    }
+
+    it("should return a string with a clean route pattern if the request has a pattern tag") {
+      val r = ParamAwareRequestNamer(reqWithTags("POST", "/boom/1", Map(play.api.Routes.ROUTE_PATTERN -> "/boom/$id<[^/]+>")))
+      r shouldBe "POST - /boom/$id"
+    }
+
   }
 
 }
