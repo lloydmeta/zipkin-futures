@@ -51,7 +51,9 @@ implicit val span = new Span()
 // Using a simple LoggingSpanCollectorImpl here as an example, but it can be a ZipkinSpanCollector that actually sends spans
 implicit val zipkinService = new BraveZipkinService("localhost", 9000, "testing", new LoggingSpanCollectorImpl("application"))
 
-val myTracedFuture1 = TracedFuture("slowHttpCall") //etc
+val myTracedFuture1 = TracedFuture("slowHttpCall") {
+  //etc
+}
 ```
 
 In both of the following examples, a new Zipkin `Span` will be created before the execution of the defined `Future` and
@@ -69,7 +71,7 @@ val myTracedFuture1 = TracedFuture("slowHttpCall") { maybeSpan =>
 }
 
 // Tracing and setting annotations from the future before sending Client-Received ;)
-val myTracedFuture2 = TracedFuture.endAnnotations("slowHttpCall") { maybeSpan =>
+val myTracedFuture2 = TracedFuture.endAnnotations("slowHttpCall", "url" -> "myServer") { maybeSpan =>
   val forwardHeaders = maybeSpan.fold(Seq.empty[(String,String)]){ toHttpHeaders }
   WS.url("myServer").withHeaders(forwardHeaders:_*).map { response =>
     (response.json, Seq("session id" -> response.header("session id").toString))
