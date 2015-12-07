@@ -38,7 +38,6 @@ object ZipkinFutures extends Build {
       crossVersion := CrossVersion.binary,
       libraryDependencies ++= braveDependencies ++ Seq(
         "com.typesafe.play" %% "play" % playVersion % Provided,
-        "org.scalatest" %% "scalatest" % scalaTestVersion % Test,
         "org.scalatestplus" %% "play" % scalaTestPlusPlay % Test
       )
     ).dependsOn(core % "test->test;compile->compile")

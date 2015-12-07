@@ -107,7 +107,7 @@ class ZipkinHeaderFilterSpec
   describe("ParamAwareRequestNamer") {
 
     def reqWithTags(method: String, uri: String, tags: Map[String, String]) = {
-      FakeRequest(method = method, uri = uri, headers = FakeHeaders(), AnyContentAsEmpty, tags = tags)
+      FakeRequest(method = method, uri = uri, headers = FakeHeaders(), body = AnyContentAsEmpty, tags = tags)
     }
 
     import ZipkinHeaderFilter.ParamAwareRequestNamer
