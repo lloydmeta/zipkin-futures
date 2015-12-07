@@ -118,7 +118,7 @@ class ZipkinHeaderFilterSpec
     }
 
     it("should return a string with a clean route pattern if the request has a pattern tag") {
-      val r = ParamAwareRequestNamer(reqWithTags("POST", "/boom/1", Map(play.api.Routes.ROUTE_PATTERN -> "/boom/$id<[^/]+>")))
+      val r = ParamAwareRequestNamer(reqWithTags("POST", "/boom/1", Map(play.api.routing.Router.Tags.RoutePattern -> "/boom/$id<[^/]+>")))
       r shouldBe "POST - /boom/$id"
     }
 
