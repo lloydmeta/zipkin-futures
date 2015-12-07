@@ -6,7 +6,7 @@ import scoverage.ScoverageKeys._
 
 object ZipkinFutures extends Build {
 
-  lazy val theVersion = "0.2.1"
+  lazy val theVersion = "0.2.2-SNAPSHOT"
   lazy val theScalaVersion = "2.11.5"
   lazy val scalaVersionsToBuild = Seq("2.10.6", "2.11.7")
   lazy val braveVersion = "2.4.1"
