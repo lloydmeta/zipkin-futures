@@ -10,6 +10,9 @@ object ZipkinFutures extends Build {
   lazy val theScalaVersion = "2.11.5"
   lazy val scalaVersionsToBuild = Seq("2.10.5", "2.11.7")
   lazy val braveVersion = "2.4.1"
+  lazy val playVersion = "2.4.4"
+  lazy val scalaTestVersion = "2.2.1"
+  lazy val scalaTestPlusPlay = "1.4.0-M3"
 
   lazy val root = Project(id = "zipkin-futures-root", base = file("."), settings = commonWithPublishSettings)
     .settings(
@@ -25,7 +28,7 @@ object ZipkinFutures extends Build {
       crossScalaVersions := scalaVersionsToBuild,
       crossVersion := CrossVersion.binary,
       libraryDependencies ++= braveDependencies ++ Seq(
-        "org.scalatest" %% "scalatest" % "2.2.1" % Test
+        "org.scalatest" %% "scalatest" % scalaTestVersion % Test
       )
     )
 
@@ -34,9 +37,8 @@ object ZipkinFutures extends Build {
       crossScalaVersions := scalaVersionsToBuild,
       crossVersion := CrossVersion.binary,
       libraryDependencies ++= braveDependencies ++ Seq(
-        "com.typesafe.play" %% "play" % "2.4.2" % Provided,
-        "org.scalatestplus" %% "play" % "1.4.0-M2" % Test,
-        "org.scalatest" %% "scalatest" % "2.2.1" % Test
+        "com.typesafe.play" %% "play" % playVersion % Provided,
+        "org.scalatestplus" %% "play" % scalaTestPlusPlay % Test
       )
     ).dependsOn(core % "test->test;compile->compile")
 
