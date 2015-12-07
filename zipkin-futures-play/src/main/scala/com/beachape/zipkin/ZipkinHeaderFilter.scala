@@ -48,9 +48,7 @@ class ZipkinHeaderFilter(zipkinServiceFactory: => ZipkinServiceLike, reqHeaderTo
   private def addHeadersToReq(req: RequestHeader, span: Span): RequestHeader = {
     val originalHeaderData = req.headers.toMap
     val withSpanData = originalHeaderData ++ zipkinService.spanToIdsMap(span).map { case (key, value) => key -> Seq(value) }
-    val newHeaders = new Headers {
-      protected val data: Seq[(String, Seq[String])] = withSpanData.toSeq
-    }
+    val newHeaders = new Headers(withSpanData.mapValues(_.headOption.getOrElse("")).toSeq)
     req.copy(headers = newHeaders)
   }
 
@@ -78,7 +76,7 @@ object ZipkinHeaderFilter {
   val ParamAwareRequestNamer: RequestHeader => String = { reqHeader =>
     import org.apache.commons.lang3.StringUtils
     val tags = reqHeader.tags
-    val pathPattern = StringUtils.replace(tags.getOrElse(play.api.Routes.ROUTE_PATTERN, reqHeader.path), "<[^/]+>", "")
+    val pathPattern = StringUtils.replace(tags.getOrElse(play.api.routing.Router.Tags.RoutePattern, reqHeader.path), "<[^/]+>", "")
     s"${reqHeader.method} - $pathPattern"
   }
 

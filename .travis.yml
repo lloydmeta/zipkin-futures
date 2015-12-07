@@ -4,5 +4,8 @@ jdk:
   - openjdk7
   - oraclejdk7
   - oraclejdk8
-script: "sbt clean coverage test"
+script:
+  - "sbt clean test:compile"
+  - "sbt coverage test"
+  - "sbt coverageReport coverageAggregate"
 after_success: "sbt coveralls"
