@@ -2,13 +2,13 @@ import sbt._
 import sbt.Keys._
 import com.typesafe.sbt.SbtScalariform._
 import scalariform.formatter.preferences._
-import scoverage.ScoverageSbtPlugin.ScoverageKeys._
+import scoverage.ScoverageKeys._
 
 object ZipkinFutures extends Build {
 
-  lazy val theVersion = "0.2.0"
+  lazy val theVersion = "0.2.1-SNAPSHOT"
   lazy val theScalaVersion = "2.11.5"
-  lazy val scalaVersionsToBuild = Seq("2.10.5", "2.11.7")
+  lazy val scalaVersionsToBuild = Seq("2.10.6", "2.11.7")
   lazy val braveVersion = "2.4.1"
   lazy val playVersion = "2.4.4"
   lazy val scalaTestVersion = "2.2.1"
@@ -38,6 +38,7 @@ object ZipkinFutures extends Build {
       crossVersion := CrossVersion.binary,
       libraryDependencies ++= braveDependencies ++ Seq(
         "com.typesafe.play" %% "play" % playVersion % Provided,
+        "org.scalatest" %% "scalatest" % scalaTestVersion % Test,
         "org.scalatestplus" %% "play" % scalaTestPlusPlay % Test
       )
     ).dependsOn(core % "test->test;compile->compile")
