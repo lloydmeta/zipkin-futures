@@ -12,7 +12,7 @@ object ZipkinFutures extends Build {
   lazy val braveVersion = "2.4.1"
   lazy val playVersion = "2.4.4"
   lazy val scalaTestVersion = "2.2.1"
-  lazy val scalaTestPlusPlay = "1.4.0-M3"
+  lazy val scalaTestPlusPlay = "1.4.0-M4"
 
   lazy val root = Project(id = "zipkin-futures-root", base = file("."), settings = commonWithPublishSettings)
     .settings(
