@@ -3,8 +3,7 @@ package com.beachape.zipkin
 import com.beachape.zipkin.services.ZipkinServiceLike
 import com.twitter.zipkin.gen.Span
 
-import scala.concurrent.{ ExecutionContext, Future }
-import scala.util.Failure
+import scala.concurrent.Future
 
 object FutureEnrichment {
 

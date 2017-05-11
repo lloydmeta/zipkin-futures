@@ -1,10 +1,12 @@
 package com.beachape.zipkin
 
+import akka.stream.Materializer
 import com.beachape.zipkin.services.ZipkinServiceLike
 import com.twitter.zipkin.gen.Span
-import play.api.mvc.{ Headers, Result, Filter, RequestHeader }
+import play.api.mvc.{ Filter, Headers, RequestHeader, Result }
+import play.api.routing.Router
 
-import scala.concurrent.Future
+import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.control.NonFatal
 import scala.util.Failure
 
@@ -22,9 +24,8 @@ import scala.util.Failure
  *   4. Upon completion of the request, adds a ServerSent annotation to the [[Span]] and sends it to the Zipkin Collector
  *
  */
-class ZipkinHeaderFilter(zipkinServiceFactory: => ZipkinServiceLike, reqHeaderToSpanName: RequestHeader => String) extends Filter {
+class ZipkinHeaderFilter(zipkinServiceFactory: => ZipkinServiceLike, reqHeaderToSpanName: RequestHeader => String)(implicit val mat: Materializer, eCtx: ExecutionContext) extends Filter {
 
-  import play.api.libs.concurrent.Execution.Implicits._
   import Implicits._
 
   private implicit lazy val zipkinService = zipkinServiceFactory
@@ -49,7 +50,7 @@ class ZipkinHeaderFilter(zipkinServiceFactory: => ZipkinServiceLike, reqHeaderTo
     val originalHeaderData = req.headers.toMap
     val withSpanData = originalHeaderData ++ zipkinService.spanToIdsMap(span).map { case (key, value) => key -> Seq(value) }
     val newHeaders = new Headers(withSpanData.mapValues(_.headOption.getOrElse("")).toSeq)
-    req.copy(headers = newHeaders)
+    req.withHeaders(newHeaders)
   }
 
 }
@@ -65,7 +66,7 @@ object ZipkinHeaderFilter {
    * @param reqHeaderToSpanName a method for turning a [[RequestHeader]] into a [[Span]] name. By default just uses the
    *                            [[RequestHeader]]#path
    */
-  def apply(zipkinServiceFactory: => ZipkinServiceLike, reqHeaderToSpanName: RequestHeader => String = ParamAwareRequestNamer): ZipkinHeaderFilter =
+  def apply(zipkinServiceFactory: => ZipkinServiceLike, reqHeaderToSpanName: RequestHeader => String = ParamAwareRequestNamer)(implicit mat: Materializer, eCtx: ExecutionContext): ZipkinHeaderFilter =
     new ZipkinHeaderFilter(zipkinServiceFactory, reqHeaderToSpanName)
 
   /**
@@ -75,8 +76,8 @@ object ZipkinHeaderFilter {
    */
   val ParamAwareRequestNamer: RequestHeader => String = { reqHeader =>
     import org.apache.commons.lang3.StringUtils
-    val tags = reqHeader.tags
-    val pathPattern = StringUtils.replace(tags.getOrElse(play.api.routing.Router.Tags.RoutePattern, reqHeader.path), "<[^/]+>", "")
+    val rawPathPattern = reqHeader.attrs.get(Router.Attrs.HandlerDef).map(_.path).getOrElse(reqHeader.path)
+    val pathPattern = StringUtils.replace(rawPathPattern, "<[^/]+>", "")
     s"${reqHeader.method} - $pathPattern"
   }
 

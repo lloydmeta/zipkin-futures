@@ -1,9 +1,8 @@
 package com.beachape.zipkin.services
 
 import com.twitter.zipkin.gen.{ Annotation, Span }
-import scala.collection.JavaConverters._
 
-import scala.concurrent.{ Future, ExecutionContext }
+import scala.concurrent.Future
 
 /**
  * Dummy ZipkinServiceLike that just returns true or false based on whether the [[Span]]s passed to it are

@@ -6,23 +6,27 @@ import scoverage.ScoverageKeys._
 
 object ZipkinFutures extends Build {
 
-  lazy val theVersion = "0.2.2-SNAPSHOT"
-  lazy val theScalaVersion = "2.11.5"
-  lazy val scalaVersionsToBuild = Seq("2.10.6", "2.11.7")
-  lazy val braveVersion = "2.4.1"
-  lazy val playVersion = "2.4.4"
-  lazy val scalaTestVersion = "2.2.1"
-  lazy val scalaTestPlusPlay = "1.4.0-M4"
+  lazy val theVersion           = "0.2.2-SNAPSHOT"
+  lazy val theScalaVersion      = "2.11.11"
+  lazy val scalaVersionsToBuild = Seq("2.11.11", "2.12.2")
+  lazy val braveVersion         = "2.4.1"
+  lazy val playVersion          = "2.6.0-M5"
+  lazy val scalaTestVersion     = "3.0.3"
+  lazy val scalaTestPlusPlay    = "3.0.0-M3"
 
-  lazy val root = Project(id = "zipkin-futures-root", base = file("."), settings = commonWithPublishSettings)
-    .settings(
-      name := "zipkin-futures-root",
-      publishArtifact := false,
-      crossScalaVersions := scalaVersionsToBuild,
-      crossVersion := CrossVersion.binary
-    ).aggregate(core, zipkinFuturesPlay)
+  lazy val root =
+    Project(id = "zipkin-futures-root", base = file("."), settings = commonWithPublishSettings)
+      .settings(
+        name := "zipkin-futures-root",
+        publishArtifact := false,
+        crossScalaVersions := scalaVersionsToBuild,
+        crossVersion := CrossVersion.binary
+      )
+      .aggregate(core, zipkinFuturesPlay)
 
-  lazy val core = Project(id = "zipkin-futures", base = file("zipkin-futures-core"), settings = commonWithPublishSettings)
+  lazy val core = Project(id = "zipkin-futures",
+                          base = file("zipkin-futures-core"),
+                          settings = commonWithPublishSettings)
     .settings(
       name := "zipkin-futures",
       crossScalaVersions := scalaVersionsToBuild,
@@ -32,19 +36,22 @@ object ZipkinFutures extends Build {
       )
     )
 
-  lazy val zipkinFuturesPlay = Project(id = "zipkin-futures-play", base = file("zipkin-futures-play"), settings = commonWithPublishSettings)
+  lazy val zipkinFuturesPlay = Project(id = "zipkin-futures-play",
+                                       base = file("zipkin-futures-play"),
+                                       settings = commonWithPublishSettings)
     .settings(
       crossScalaVersions := scalaVersionsToBuild,
       crossVersion := CrossVersion.binary,
       libraryDependencies ++= braveDependencies ++ Seq(
-        "com.typesafe.play" %% "play" % playVersion % Provided,
-        "org.scalatestplus" %% "play" % scalaTestPlusPlay % Test
+        "com.typesafe.play"      %% "play"               % playVersion       % Provided,
+        "org.scalatestplus.play" %% "scalatestplus-play" % scalaTestPlusPlay % Test
       )
-    ).dependsOn(core % "test->test;compile->compile")
+    )
+    .dependsOn(core % "test->test;compile->compile")
 
-  lazy val braveDependencies =  Seq(
+  lazy val braveDependencies = Seq(
     "com.github.kristofa" % "brave-zipkin-spancollector" % braveVersion,
-    "com.github.kristofa" % "brave-impl" % braveVersion
+    "com.github.kristofa" % "brave-impl"                 % braveVersion
   )
 
   lazy val commonSettings = Seq(
@@ -117,17 +124,18 @@ object ZipkinFutures extends Build {
             <url>http://lloydmeta.github.io</url>
           </developer>
         </developers>,
-    publishTo <<= version { v =>
+    publishTo := {
       val nexus = "https://oss.sonatype.org/"
-      if (v.trim.endsWith("SNAPSHOT"))
+      if (version.value.trim.endsWith("SNAPSHOT"))
         Some("snapshots" at nexus + "content/repositories/snapshots")
       else
-        Some("releases"  at nexus + "service/local/staging/deploy/maven2")
+        Some("releases" at nexus + "service/local/staging/deploy/maven2")
     },
     publishMavenStyle := true,
     publishArtifact in Test := false,
-    pomIncludeRepository := { _ => false }
+    pomIncludeRepository := { _ =>
+      false
+    }
   )
-
 
 }
