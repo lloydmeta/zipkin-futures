@@ -87,7 +87,8 @@ Future { Ok(expensiveResult) } trace ("expensive-process")
 
 ### With Play
 
-*Note*: 0.2.x and up are Play 2.4 compatible only
+*Note*: 0.2.x and up are Play 2.4+ compatible only
+*Note*: 0.3.x and up are Play 2.6+ compatible only
 
 `"com.beachape" %% "zipkin-futures-play"` defines a `zipkin-futures-play` dependency that helps trace Futures within
 the context of an HTTP Play server.
